@@ -71,6 +71,13 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ```
 
+## 🗄 데이터베이스 초기화 (Schema + Seed 파일 실행)
+```bash
+cd MyHeartBeat/server/database
+mysql -u root -p -P 3306 < schema.sql
+```
+3306 대신 자신의 MySQL 포트 번호
+
 ## 📁 프로젝트 구조
 
 ```bash
