@@ -1,0 +1,124 @@
+/* 전체 랜딩 영역 */
+.landing-container {
+  min-height: 100vh;
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(
+    circle at top left,
+    #e0ecff 0,
+    #f5f6ff 40%,
+    #ffffff 100%
+  );
+}
+
+/* 가운데 카드 영역 */
+.landing-card {
+  max-width: 520px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  padding: 36px 32px 32px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+  text-align: center;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* 상단 로고 뱃지 */
+.landing-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4f46e5;
+  margin-bottom: 14px;
+}
+
+/* 메인 타이틀 */
+.landing-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  color: #111827;
+}
+
+/* 서브 타이틀 */
+.landing-subtitle {
+  font-size: 15px;
+  margin: 0 0 28px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* 버튼 영역 */
+.landing-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 공통 버튼 기본 스타일 */
+.start-btn,
+.signup-btn {
+  min-width: 130px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+/* 시작하기 버튼 (메인) */
+.start-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+}
+
+.start-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* 회원가입 버튼 (아웃라인) */
+.signup-btn {
+  background: transparent;
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+}
+
+.signup-btn:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* 모바일에서 카드/폰트 살짝 줄이기 */
+@media (max-width: 480px) {
+  .landing-card {
+    padding: 28px 22px 24px;
+  }
+
+  .landing-title {
+    font-size: 24px;
+  }
+
+  .landing-subtitle {
+    font-size: 14px;
+  }
+
+  .landing-buttons {
+    flex-direction: column;
+  }
+
+  .start-btn,
+  .signup-btn {
+    width: 100%;
+  }
+}
