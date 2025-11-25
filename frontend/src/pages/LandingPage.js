@@ -1,7 +1,10 @@
 // src/pages/LandingPage.js
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 
-function LandingPage({ onStart }) {
+function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="landing-container">
       <div className="landing-card">
@@ -15,7 +18,7 @@ function LandingPage({ onStart }) {
         </p>
 
         <div className="landing-buttons">
-          <button className="start-btn" onClick={onStart}>
+          <button className="start-btn" onClick={() => navigate("/main")}>
             시작하기 🚀
           </button>
           <a href="/signup" className="signup-btn">
