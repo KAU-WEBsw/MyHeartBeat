@@ -82,24 +82,35 @@ mysql -u root -p -P 3306 < schema.sql
 
 ```bash
 MyHeartBeat/
-├─ server/          # 백엔드 (Node.js + Express + MySQL)
+├─ server/                # 백엔드 (Node.js + Express + MySQL)
 │  ├─ src/
-│  │  ├─ app.js       # 서버 설정, 미들웨어(CORS/JSON), 라우터 연결
-│  │  ├─ server.js    # 서버 실행 파일 (node 실행 진입점)
-│  │  ├─ config/      # DB 설정 관리
-│  │  ├─ controllers/ # API 로직 위치
-│  │  └─ routes/      # 엔드포인트(URL) 관리
-│  ├─ .env            # DB 환경 변수 (개인별 설정)
-│  └─ package.json    # 백엔드 의존성 관리
+│  │  ├─ app.js           # 서버 설정 & 미들웨어 등록
+│  │  ├─ server.js        # 서버 실행 엔트리 포인트
+│  │  ├─ config/          # DB 연결 설정
+│  │  ├─ controllers/     # 요청 처리 로직
+│  │  ├─ middleware/      # 인증 / 보안 관련 미들웨어
+│  │  ├─ models/          # DB 모델 정의
+│  │  └─ routes/          # API 엔드포인트 관리
+│  ├─ .env                # 환경 변수 (DB 접근 정보 등)
+│  ├─ package.json        # 서버 의존성 관리
+│  └─ README.md           # (선택) 서버 설명 문서
 │
-└─ frontend/        # 프론트 (React)
+└─ frontend/              # 프론트엔드 (React)
+   ├─ public/             # 정적 리소스
    ├─ src/
-   │  ├─ App.js       # 메인 페이지
-   │  ├─ index.js     # React 앱 시작점
-   │  ├─ components/  # 재사용 컴포넌트
-   │  ├─ pages/       # 페이지 뷰 (로그인/메인/상세/등록 등)
-   │  └─ styles/      # CSS 및 UI 관련
-   └─ package.json    # 프론트 의존성 관리
+   │  ├─ App.js           # 전체 앱 구조 / 라우팅
+   │  ├─ App.css          # 전역 스타일링
+   │  ├─ index.js         # React 렌더링 시작점
+   │  ├─ index.css        # 기본 스타일
+   │  ├─ components/      # 재사용 컴포넌트
+   │  │  ├─ Header.js
+   │  │  └─ Header.css
+   │  └─ pages/
+   │     ├─ MainPage.js   # 메인 페이지 (경매 홈)
+   │     └─ MainPage.css
+   ├─ package.json        # 프론트 의존성 관리
+   └─ README.md           # (선택) 프론트 설명 문서
+
 
 ```
 
