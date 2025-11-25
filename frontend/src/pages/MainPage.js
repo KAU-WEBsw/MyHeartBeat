@@ -1,8 +1,10 @@
 // src/pages/MainPage.js
 import "./MainPage.css";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 
 function MainPage() {
+  const navigate = useNavigate();
   return (
     <div className="page-root">
       {/* 공통 헤더 */}
@@ -12,8 +14,15 @@ function MainPage() {
       <main className="main">
         <div className="main-placeholder">
           <p>여기에 경매 리스트/배너 들어갈 예정 😊</p>
+          <br />
+          {/* 경매 상세 페이지 예비 */}
+          <button 
+            className="detail-button"
+            onClick={() => navigate("/product/1")}
+          >1번 경매 상세 페이지 이동</button>
         </div>
       </main>
+
 
       {/* 공통 푸터 */}
       <footer className="footer">

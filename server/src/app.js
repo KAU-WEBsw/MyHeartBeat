@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const db = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
+const auctionRoutes = require("./routes/auction.routes");
+
 
 const app = express();
 
@@ -27,5 +29,7 @@ app.get("/test-db", async (req, res) => {
 
 // 회원가입 api 라우트
 app.use("/api/auth", authRoutes);
+// 상품 상세 api 라우트
+app.use("/api/auctions", auctionRoutes);
 
 module.exports = app;
