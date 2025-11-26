@@ -1,10 +1,15 @@
-/* 전체 랜딩 영역 */
+/* ===================== 전체 레이아웃 ===================== */
+
 .landing-container {
   min-height: 100vh;
   padding: 40px 24px;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+
+  /* 파스텔 감성 그라데이션 배경 */
   background: radial-gradient(
     circle at top left,
     #e0ecff 0,
@@ -13,23 +18,81 @@
   );
 }
 
-/* 가운데 카드 영역 */
+/* ===================== 떠다니는 아이콘 ===================== */
+
+.float-item {
+  position: absolute;
+  width: 120px;
+  opacity: 0.9;
+  z-index: 5;
+  animation: floating 6s ease-in-out infinite;
+}
+
+/* 개별 위치 */
+.item1 {
+  top: 15%;
+  left: 8%;
+  animation-delay: 0s;
+}
+.item2 {
+  top: 60%;
+  left: 5%;
+  animation-delay: 1s;
+}
+.item3 {
+  top: 20%;
+  right: 10%;
+  animation-delay: 0.5s;
+}
+.item4 {
+  bottom: 10%;
+  right: 5%;
+  animation-delay: 1.5s;
+}
+.item5 {
+  top: 75%;
+  left: 45%;
+  animation-delay: 0.8s;
+}
+.item6 {
+  top: 5%;
+  right: 40%;
+  animation-delay: 1.2s;
+}
+
+/* 둥둥 떠다니는 애니메이션 */
+@keyframes floating {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ===================== 중앙 카드 ===================== */
+
 .landing-card {
   max-width: 520px;
   width: 100%;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 18px;
   padding: 36px 32px 32px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
   text-align: center;
+  position: relative;
+  z-index: 10;
+
   border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
 }
 
-/* 상단 로고 뱃지 */
+/* ===================== 텍스트 디자인 ===================== */
+
 .landing-logo {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 13px;
@@ -39,30 +102,28 @@
   margin-bottom: 14px;
 }
 
-/* 메인 타이틀 */
 .landing-title {
   font-size: 32px;
   font-weight: 800;
-  margin: 0 0 10px;
+  margin-bottom: 10px;
   color: #111827;
 }
 
-/* 서브 타이틀 */
 .landing-subtitle {
   font-size: 15px;
-  margin: 0 0 28px;
+  margin-bottom: 28px;
   color: #6b7280;
   line-height: 1.5;
 }
 
-/* 버튼 영역 */
+/* ===================== 버튼 디자인 ===================== */
+
 .landing-buttons {
   display: flex;
   justify-content: center;
   gap: 12px;
 }
 
-/* 공통 버튼 기본 스타일 */
 .start-btn,
 .signup-btn {
   min-width: 130px;
@@ -71,35 +132,40 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border: none;
   transition: all 0.18s ease;
+  border: none;
 }
 
-/* 시작하기 버튼 (메인) */
+/* 메인 버튼 */
 .start-btn {
-  background-color: #2563eb;
-  color: #ffffff;
+  background: #2563eb;
+  color: #fff;
   box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
 }
 
 .start-btn:hover {
-  background-color: #1d4ed8;
+  background: #1d4ed8;
   transform: translateY(-1px);
 }
 
-/* 회원가입 버튼 (아웃라인) */
+/* 회원가입 버튼 */
 .signup-btn {
-  background: transparent;
   border: 1.5px solid #2563eb;
+  background: transparent;
   color: #2563eb;
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .signup-btn:hover {
-  background-color: #2563eb;
-  color: #ffffff;
+  background: #2563eb;
+  color: #fff;
 }
 
-/* 모바일에서 카드/폰트 살짝 줄이기 */
+/* ===================== 모바일 대응 ===================== */
+
 @media (max-width: 480px) {
   .landing-card {
     padding: 28px 22px 24px;
