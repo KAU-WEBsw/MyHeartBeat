@@ -41,10 +41,9 @@ npm start
 
 📌 항상 백엔드 + 프론트 둘 다 실행해야 화면에서 기능 테스트 가능!
 
-## 🔑 환경 변수 설정 (.env)
+## 데이터베이스 설정
 
-📌 위치: server/.env
-GitHub에 업로드 금지!
+📌 위치: MyHeartBeat/.env 파일을 생성하고 다음 내용을 입력하세요
 
 ```
 DB_HOST=localhost
@@ -54,29 +53,35 @@ DB_NAME=auction_db
 PORT=4000
 ```
 
-## 🗄 데이터베이스 생성
+### 데이터베이스 사용하기
+
+#### 방법A : 터미널 사용
+
+터미널에서 다음 명령어를 실행하세요:
+
+```bash
+mysql -u root -p < server/database/schema.sql
+```
+
+#### 방법B : MySQL Workbench 사용
 
 MySQL Workbench에서 실행:
 
-```sql
-CREATE DATABASE IF NOT EXISTS auction_db;
-USE auction_db;
+1. MySQL Workbench 실행
+2. 로컬 MySQL 서버에 연결
+3. 상단 메뉴에서 `File` → `Open SQL Script` 선택
+4. `server/database/schema.sql` 파일 열기
+5. 전체 스크립트 선택 후 실행 (⚡ 번개 아이콘 클릭 또는 `Ctrl+Shift+Enter`)
 
-CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  nickname VARCHAR(50) NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+데이터베이스와 테이블이 생성됩니다.
 
-## 🗄 데이터베이스 초기화 (Schema + Seed 파일 실행)
+### 시드 데이터 추가 (선택사항)
+
+테스트용 데이터를 추가하려면:
+
 ```bash
-cd MyHeartBeat/server/database
-mysql -u root -p -P 3306 < schema.sql
+node server/database/seed.js
 ```
-3306 대신 자신의 MySQL 포트 번호
 
 ## 📁 프로젝트 구조
 
