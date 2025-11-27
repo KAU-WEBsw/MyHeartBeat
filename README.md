@@ -17,7 +17,7 @@ React + Node.js 기반 **온라인 경매 플랫폼**
 ```bash
 git clone <repo-url>
 cd MyHeartBeat
-````
+```
 
 ### 2️⃣ 백엔드 실행 (Express)
 
@@ -43,17 +43,21 @@ npm start
 
 ## 데이터베이스 설정
 
-📌 위치: MyHeartBeat/.env 파일을 생성하고 다음 내용을 입력하세요
+### 1️⃣ .env 파일 설정
 
-```
+1. 프로젝트 루트에 있는 `.env.example` 파일의 이름을 `.env` 로 변경하세요.
+
+2. `.env` 파일을 열어서 본인의 MySQL 비밀번호를 입력하세요:
+
+```env
 DB_HOST=localhost
-DB_USER=사용자ID
-DB_PASSWORD=비밀번호
+DB_USER=root
+DB_PASSWORD=본인의_MySQL_비밀번호
 DB_NAME=auction_db
 PORT=4000
 ```
 
-### 데이터베이스 사용하기
+### 2️⃣ 데이터베이스 사용하기
 
 #### 방법A : 터미널 사용
 
@@ -74,14 +78,6 @@ MySQL Workbench에서 실행:
 5. 전체 스크립트 선택 후 실행 (⚡ 번개 아이콘 클릭 또는 `Ctrl+Shift+Enter`)
 
 데이터베이스와 테이블이 생성됩니다.
-
-### 시드 데이터 추가 (선택사항)
-
-테스트용 데이터를 추가하려면:
-
-```bash
-node server/database/seed.js
-```
 
 ## 📁 프로젝트 구조
 
