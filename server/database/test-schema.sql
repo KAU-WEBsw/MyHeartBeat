@@ -37,7 +37,6 @@ CREATE TABLE auctions (
     image_url VARCHAR(500),
     start_price DECIMAL(10,2) NOT NULL,
     current_price DECIMAL(10,2) NOT NULL,
-    min_bid_increment DECIMAL(10,2) NOT NULL,
     immediate_purchase_price DECIMAL(10,2) NULL,
     status ENUM('ongoing','ended') DEFAULT 'ongoing',
     start_time DATETIME NOT NULL,
