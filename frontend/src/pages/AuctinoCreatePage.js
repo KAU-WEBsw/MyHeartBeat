@@ -21,7 +21,6 @@ function AuctionCreatePage() {
     description: "",
     startPrice: "",
     buyNowPrice: "",
-    minBid: "",
     startDate: "",
     endDate: "",
   });
@@ -56,7 +55,6 @@ function AuctionCreatePage() {
           description: form.description,
           imageUrl: null, // TODO: 이미지 업로드 붙이면 실제 URL
           startPrice: Number(form.startPrice),
-          minBidIncrement: Number(form.minBid),
           immediatePurchasePrice: form.buyNowPrice
             ? Number(form.buyNowPrice)
             : null,
@@ -204,27 +202,6 @@ function AuctionCreatePage() {
                       placeholder="입력하지 않으면 미설정"
                       value={form.buyNowPrice}
                       onChange={handleChange}
-                    />
-                    <span className={styles.suffix}>원</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.gridTwo}>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>
-                    최소 입찰 단위 <span className={styles.required}>*</span>
-                  </label>
-                  <div className={styles.inputWithSuffix}>
-                    <input
-                      className={styles.input}
-                      name="minBid"
-                      type="number"
-                      min="0"
-                      placeholder="예: 1000"
-                      value={form.minBid}
-                      onChange={handleChange}
-                      required
                     />
                     <span className={styles.suffix}>원</span>
                   </div>

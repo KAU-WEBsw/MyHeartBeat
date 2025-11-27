@@ -13,7 +13,6 @@ exports.createAuction = async (req, res) => {
       description,
       imageUrl,
       startPrice,
-      minBidIncrement,
       immediatePurchasePrice,
       startTime,
       endTime,
@@ -25,7 +24,6 @@ exports.createAuction = async (req, res) => {
       !sellerId ||
       !title ||
       !startPrice ||
-      !minBidIncrement ||
       !startTime ||
       !endTime
     ) {
@@ -46,9 +44,9 @@ exports.createAuction = async (req, res) => {
     const [result] = await db.query(
       `INSERT INTO auctions
         (seller_id, category_id, title, description, image_url,
-        start_price, current_price, min_bid_increment,
+        start_price, current_price,
         immediate_purchase_price, status, start_time, end_time)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         sellerId,
         categoryId || null,
@@ -57,7 +55,6 @@ exports.createAuction = async (req, res) => {
         imageUrl || null,
         startPrice,
         currentPrice,
-        minBidIncrement,
         immediatePurchasePrice || null,
         status,
         startTime,
@@ -86,16 +83,15 @@ exports.getAuctionById = async (req, res) => {
 
     // DB에서 상품 정보 조회
     const [auctions] = await db.query(
-      // SQL 쿼리 실행
       `SELECT 
         a.*,
         u.nickname as seller_nickname,
         c.name as category_name
       FROM auctions a
-      LEFT JOIN users u ON a.seller_id = u.id // 판매자 정보 조인
-      LEFT JOIN categories c ON a.category_id = c.id // 카테고리 정보 조인
-      WHERE a.id = ?`, // 상품 ID로 필터링
-      [id] // 상품 ID 파라미터 전달
+      LEFT JOIN users u ON a.seller_id = u.id
+      LEFT JOIN categories c ON a.category_id = c.id
+      WHERE a.id = ?`,
+      [id]
     );
 
     // 상품이 없으면 404 에러
@@ -113,15 +109,23 @@ exports.getAuctionById = async (req, res) => {
       FROM bids b
       LEFT JOIN users u ON b.bidder_id = u.id
       WHERE b.auction_id = ?
-      ORDER BY b.created_at DESC`, // 입찰 내역 최신순 정렬
+      ORDER BY b.created_at DESC`,
       [id]
     );
+
+    // 현재가를 bids의 최고가로 계산 (입찰이 없으면 시작가)
+    let currentPrice = Number(auction.start_price);
+    if (bids.length > 0) {
+      const maxBid = Math.max(...bids.map(bid => Number(bid.amount)));
+      currentPrice = maxBid;
+    }
 
     // 결과 반환
     res.json({
       ...auction,
+      current_price: currentPrice,
       bids: bids,
-    }); // JSON 응답을 클라이언트에 전송
+    });
   } catch (error) {
     // 에러 발생 시
     console.error(error);
