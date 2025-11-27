@@ -37,7 +37,6 @@ CREATE TABLE auctions (
     image_url VARCHAR(500),
     start_price DECIMAL(10,2) NOT NULL,
     current_price DECIMAL(10,2) NOT NULL,
-    min_bid_increment DECIMAL(10,2) NOT NULL,
     immediate_purchase_price DECIMAL(10,2) NULL,
     status ENUM('ongoing','ended') DEFAULT 'ongoing',
     start_time DATETIME NOT NULL,
@@ -85,16 +84,16 @@ INSERT INTO categories (name) VALUES
 -- auctions
 INSERT INTO auctions (
     seller_id, category_id, title, description, image_url,
-    start_price, current_price, min_bid_increment,
+    start_price, current_price,
     immediate_purchase_price,
     status, start_time, end_time
 ) VALUES
-(1, 1, '중고 아이패드 판매', '깨끗하게 사용한 아이패드입니다.', 'https://example.com/ipad.jpg',
- 200000, 200000, 5000, 300000,
+(1, 1, '중고 아이패드 판매', '깨끗하게 사용한 아이패드입니다.', 'https://istore.xcache.kinxcdn.com/prd/data/goods/1/2024/11/342_temp_17307911200801large.jpg',
+ 200000, 200000, 300000,
  'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY)
 ),
 (2, 3, '유화 그림 판매', '직접 그린 유화 작품입니다.', 'https://example.com/art.jpg',
- 50000, 50000, 2000, NULL,
+ 50000, 50000, NULL,
  'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY)
 );
 
