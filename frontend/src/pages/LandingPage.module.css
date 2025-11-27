@@ -1,6 +1,4 @@
-/* ===================== 전체 레이아웃 ===================== */
-
-.landing-container {
+.landingContainer {
   min-height: 100vh;
   padding: 40px 24px;
   display: flex;
@@ -20,15 +18,15 @@
 
 /* ===================== 떠다니는 아이콘 ===================== */
 
-.float-item {
+.floatItem {
   position: absolute;
-  width: 120px;
+  width: 120px; /* 🔙 다시 크게 (원래 값) */
   opacity: 0.9;
   z-index: 5;
   animation: floating 6s ease-in-out infinite;
 }
 
-/* 개별 위치 */
+/* 개별 위치 (원래 값 그대로) */
 .item1 {
   top: 15%;
   left: 8%;
@@ -75,7 +73,7 @@
 
 /* ===================== 중앙 카드 ===================== */
 
-.landing-card {
+.landingCard {
   max-width: 520px;
   width: 100%;
   background: rgba(255, 255, 255, 0.92);
@@ -91,7 +89,7 @@
 
 /* ===================== 텍스트 디자인 ===================== */
 
-.landing-logo {
+.landingLogo {
   display: inline-flex;
   padding: 6px 14px;
   border-radius: 999px;
@@ -102,14 +100,14 @@
   margin-bottom: 14px;
 }
 
-.landing-title {
+.landingTitle {
   font-size: 32px;
   font-weight: 800;
   margin-bottom: 10px;
   color: #111827;
 }
 
-.landing-subtitle {
+.landingSubtitle {
   font-size: 15px;
   margin-bottom: 28px;
   color: #6b7280;
@@ -118,14 +116,14 @@
 
 /* ===================== 버튼 디자인 ===================== */
 
-.landing-buttons {
+.landingButtons {
   display: flex;
   justify-content: center;
   gap: 12px;
 }
 
-.start-btn,
-.signup-btn {
+.startBtn,
+.signupBtn {
   min-width: 130px;
   padding: 11px 20px;
   border-radius: 999px;
@@ -137,19 +135,19 @@
 }
 
 /* 메인 버튼 */
-.start-btn {
+.startBtn {
   background: #2563eb;
   color: #fff;
   box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
 }
 
-.start-btn:hover {
+.startBtn:hover {
   background: #1d4ed8;
   transform: translateY(-1px);
 }
 
-/* 회원가입 버튼 */
-.signup-btn {
+/* 로그인 버튼 */
+.signupBtn {
   border: 1.5px solid #2563eb;
   background: transparent;
   color: #2563eb;
@@ -159,7 +157,7 @@
   align-items: center;
 }
 
-.signup-btn:hover {
+.signupBtn:hover {
   background: #2563eb;
   color: #fff;
 }
@@ -167,24 +165,24 @@
 /* ===================== 모바일 대응 ===================== */
 
 @media (max-width: 480px) {
-  .landing-card {
+  .landingCard {
     padding: 28px 22px 24px;
   }
 
-  .landing-title {
+  .landingTitle {
     font-size: 24px;
   }
 
-  .landing-subtitle {
+  .landingSubtitle {
     font-size: 14px;
   }
 
-  .landing-buttons {
+  .landingButtons {
     flex-direction: column;
   }
 
-  .start-btn,
-  .signup-btn {
+  .startBtn,
+  .signupBtn {
     width: 100%;
   }
 }

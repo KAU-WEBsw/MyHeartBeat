@@ -1,5 +1,5 @@
 /* 페이지 전체 레이아웃 */
-.page-root {
+.pageRoot {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -15,7 +15,7 @@
   align-items: center;
 }
 
-.main-placeholder {
+.mainPlaceholder {
   width: 100%;
   max-width: 1200px;
   border-radius: 12px;
@@ -29,6 +29,25 @@
   font-size: 16px;
 }
 
+/* 임시 상세 이동 버튼 */
+.detailButton {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #2563eb;
+  background-color: white;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.detailButton:hover {
+  background-color: #2563eb;
+  color: white;
+}
+
 /* Footer 스타일 */
 .footer {
   background-color: #050816;
@@ -37,7 +56,7 @@
 }
 
 /* footer 4컬럼 그리드 레이아웃 */
-.footer .footer-inner {
+.footerInner {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -48,56 +67,56 @@
 }
 
 /* 각 컬럼 기본 스타일 */
-.footer-col h4 {
+.footerCol h4 {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 12px;
 }
 
-.footer-col p {
+.footerCol p {
   font-size: 14px;
   line-height: 1.5;
   color: #9ca3af;
   margin: 0 0 12px;
 }
 
-.footer-col ul {
+.footerCol ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.footer-col ul li {
+.footerCol ul li {
   font-size: 14px;
   color: #d1d5db;
   margin-bottom: 8px;
   cursor: pointer;
 }
 
-.footer-col ul li:hover {
+.footerCol ul li:hover {
   color: #ffffff;
 }
 
 /* SNS 영역 */
-.footer-sns {
+.footerSns {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
   margin-top: 8px;
 }
 
-.footer-sns span {
+.footerSns span {
   font-size: 13px;
   color: #9ca3af;
   cursor: pointer;
 }
 
-.footer-sns span:hover {
+.footerSns span:hover {
   color: #ffffff;
 }
 
 /* 하단 저작권 줄 */
-.footer-bottom {
+.footerBottom {
   width: 100%;
   margin-top: 12px;
   text-align: center;
@@ -106,7 +125,7 @@
 }
 
 /* 공통 링크 버튼 (필요 시 사용) */
-.signup-link-btn {
+.signupLinkBtn {
   font-size: 16px;
   font-weight: 600;
   color: #2563eb;
@@ -114,19 +133,19 @@
   text-decoration: none;
 }
 
-.signup-link-btn:hover {
+.signupLinkBtn:hover {
   text-decoration: underline;
 }
 
 /* 반응형 처리 */
 @media (max-width: 1024px) {
-  .footer .footer-inner {
+  .footerInner {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .footer .footer-inner {
+  .footerInner {
     grid-template-columns: 1fr;
     gap: 24px;
   }

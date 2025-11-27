@@ -1,64 +1,58 @@
-// src/pages/LandingPage.js
 import { useNavigate } from "react-router-dom";
-import "./LandingPage.css";
+import styles from "./LandingPage.module.css";
 
 function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="landing-container">
-      {/* 🔹 둥둥 떠다니는 귀여운 아이콘들 */}
+    <div className={styles.landingContainer}>
       <img
         src="/assets/floating/camera.png"
-        className="float-item item1"
-        alt="camera"
+        className={`${styles.floatItem} ${styles.item1}`}
       />
       <img
         src="/assets/floating/ring.png"
-        className="float-item item2"
-        alt="ring"
+        className={`${styles.floatItem} ${styles.item2}`}
       />
       <img
         src="/assets/floating/bag.png"
-        className="float-item item3"
-        alt="bag"
+        className={`${styles.floatItem} ${styles.item3}`}
       />
       <img
         src="/assets/floating/chair.png"
-        className="float-item item4"
-        alt="chair"
+        className={`${styles.floatItem} ${styles.item4}`}
       />
       <img
         src="/assets/floating/guitar.png"
-        className="float-item item5"
-        alt="guitar"
+        className={`${styles.floatItem} ${styles.item5}`}
       />
       <img
         src="/assets/floating/toy.png"
-        className="float-item item6"
-        alt="toy"
+        className={`${styles.floatItem} ${styles.item6}`}
       />
 
-      {/* 메인 카드 */}
-      <div className="landing-card">
-        <div className="landing-logo">내맘똑</div>
+      <div className={styles.landingCard}>
+        <div className={styles.landingLogo}>내맘똑</div>
 
-        <h1 className="landing-title">내 맘에 똑드는 경매 플랫폼</h1>
+        <h1 className={styles.landingTitle}>내 맘에 똑드는 경매 플랫폼</h1>
 
-        <p className="landing-subtitle">
+        <p className={styles.landingSubtitle}>
           원하는 물건을 경매로, 합리적인 가격에 만나보세요.
           <br />
           지금 바로 내맘똑에서 새로운 거래를 시작하세요.
         </p>
 
-        <div className="landing-buttons">
-          <button className="start-btn" onClick={() => navigate("/main")}>
+        <div className={styles.landingButtons}>
+          <button className={styles.startBtn} onClick={() => navigate("/main")}>
             시작하기 🚀
           </button>
 
-          <a href="/signup" className="signup-btn">
-            회원가입 ✨
-          </a>
+          <button
+            className={styles.signupBtn}
+            onClick={() => navigate("/login")}
+          >
+            로그인 ✨
+          </button>
         </div>
       </div>
     </div>
