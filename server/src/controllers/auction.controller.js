@@ -1,5 +1,7 @@
 // MySQL 연결 풀을 가져옵니다.
 const db = require("../config/db");
+// 물품 목록 - 필터 (utils/auction.filters/js)
+const { buildConditions, buildListQuery } = require("../utils/auction.filters");
 
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
@@ -130,5 +132,68 @@ exports.getAuctionById = async (req, res) => {
     // 에러 발생 시
     console.error(error);
     res.status(500).json({ message: "서버 오류가 발생했습니다." });
+  }
+};
+
+// ==========================================================
+// 🟦 경매 목록 조회 API (GET /api/auctions)
+// - 필터: 상태(status), 카테고리(category), 가격(min/max)
+// - 페이지네이션(page, pageSize)
+// - 로그인 사용자일 경우 찜 여부(liked) 포함
+// ==========================================================
+exports.getAuctions = async (req, res) => {
+  try {
+    const { status, category, minPrice, maxPrice, page = 1, pageSize = 9, userId } = req.query;
+
+    const pageNum = Number(page) || 1;
+    const size = Number(pageSize) || 9;
+    const offset = (pageNum - 1) * size;
+
+    const filter = buildConditions({ status, category, minPrice, maxPrice });
+
+    const countSql =
+      "SELECT COUNT(*) AS total FROM auctions a LEFT JOIN categories c ON a.category_id = c.id " +
+      filter.whereClause;
+    const [countRows] = await db.query(countSql, filter.values);
+    const total = countRows?.[0]?.total || 0;
+
+    let params = [...filter.values];
+    let withLikes = false;
+    if (userId) {
+      withLikes = true;
+      params.unshift(Number(userId));
+    }
+
+    let items;
+    try {
+      const selectSql = buildListQuery({ withLikes, whereClause: filter.whereClause });
+      items = await db.query(selectSql, [...params, size, offset]).then((r) => r[0]);
+    } catch (err) {
+      if (err.code === "ER_NO_SUCH_TABLE" && err.message.includes("likes")) {
+        const selectSql = buildListQuery({ withLikes: false, whereClause: filter.whereClause });
+        items = await db.query(selectSql, [...filter.values, size, offset]).then((r) => r[0]);
+      } else {
+        throw err;
+      }
+    }
+
+    res.json({ total, page: pageNum, pageSize: size, items });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "경매 목록을 불러오지 못했습니다." });
+  }
+};
+
+// ==========================================================
+// 🟦 카테고리 목록 조회 API (GET /api/auctions/categories)
+// - 모든 카테고리 이름을 오름차순 정렬하여 반환
+// ==========================================================
+exports.getCategories = async (_req, res) => {
+  try {
+    const [rows] = await db.query("SELECT name FROM categories ORDER BY name ASC");
+    res.json({ categories: rows.map((r) => r.name) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "카테고리를 불러오지 못했습니다." });
   }
 };

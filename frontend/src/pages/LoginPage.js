@@ -1,4 +1,4 @@
-// src/pages/LoginPage.js
+// src/pages/LoginPage.js 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css"; // ✅ styles로 import
@@ -33,7 +33,8 @@ function LoginPage() {
       }
 
       alert("로그인 성공!");
-      navigate("/main");
+      //navigate("/main"); --- main -> auction/list로 변경
+      navigate("/auction/list");
     } catch (error) {
       alert("서버 오류! 로그인 실패");
     }

@@ -1,4 +1,4 @@
-// React Router를 사용하여 페이지 라우팅 설정
+// React Router를 사용하여 페이지 라우팅 설정 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -6,6 +6,9 @@ import SignupPage from "./pages/SignupPage";
 import MainPage from "./pages/MainPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AuctionCreatePage from "./pages/AuctinoCreatePage";
+import AuctionListPage from "./pages/AuctionListPage";
+import MyPage from "./pages/MyPage";
+
 
 function App() {
   return (
@@ -17,6 +20,10 @@ function App() {
         <Route path="/main" element={<MainPage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/auction/new" element={<AuctionCreatePage />} />
+        <Route path="/auction/list" element={<AuctionListPage />} />
+        <Route path="/list" element={<AuctionListPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/mypage/:userId" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );
