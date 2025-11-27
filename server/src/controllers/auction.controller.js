@@ -1,15 +1,92 @@
 // MySQL 연결 풀을 가져옵니다.
 const db = require("../config/db");
 
-// 상품 상세 정보 조회 API
-// 다른 파일에서 사용할 수 있도록 함수 export 정의 
+// ==========================================================
+// 🟦 신규 경매 등록 API (POST /api/auctions)
+// ==========================================================
+exports.createAuction = async (req, res) => {
+  try {
+    // 클라이언트에서 전달된 데이터
+    const {
+      title,
+      categoryId,
+      description,
+      imageUrl,
+      startPrice,
+      minBidIncrement,
+      immediatePurchasePrice,
+      startTime,
+      endTime,
+      sellerId,
+    } = req.body;
+
+    // 필수값 체크
+    if (
+      !sellerId ||
+      !title ||
+      !startPrice ||
+      !minBidIncrement ||
+      !startTime ||
+      !endTime
+    ) {
+      return res.status(400).json({ message: "필수 값이 누락되었습니다." });
+    }
+
+    // 시간 유효성 체크
+    if (new Date(startTime) >= new Date(endTime)) {
+      return res
+        .status(400)
+        .json({ message: "종료 시간은 시작 시간보다 늦어야 합니다." });
+    }
+
+    const status = "ongoing"; // 기본 상태 = 진행중
+    const currentPrice = startPrice; // 현재가 = 시작가로 초기화
+
+    // DB INSERT 실행
+    const [result] = await db.query(
+      `INSERT INTO auctions
+        (seller_id, category_id, title, description, image_url,
+        start_price, current_price, min_bid_increment,
+        immediate_purchase_price, status, start_time, end_time)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        sellerId,
+        categoryId || null,
+        title,
+        description || null,
+        imageUrl || null,
+        startPrice,
+        currentPrice,
+        minBidIncrement,
+        immediatePurchasePrice || null,
+        status,
+        startTime,
+        endTime,
+      ]
+    );
+
+    // 성공 응답
+    res.status(201).json({
+      message: "경매 등록 성공",
+      auctionId: result.insertId,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "서버 오류가 발생했습니다." });
+  }
+};
+
+// ==========================================================
+// 🟦 상품 상세 정보 조회 API (GET /api/auctions/:id)
+// ==========================================================
 exports.getAuctionById = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     // URL에서 상품 ID 가져오기 (/api/auctions/3 → id = 3)
-    
+
     // DB에서 상품 정보 조회
-    const [auctions] = await db.query( // SQL 쿼리 실행
+    const [auctions] = await db.query(
+      // SQL 쿼리 실행
       `SELECT 
         a.*,
         u.nickname as seller_nickname,
@@ -43,9 +120,10 @@ exports.getAuctionById = async (req, res) => {
     // 결과 반환
     res.json({
       ...auction,
-      bids: bids
+      bids: bids,
     }); // JSON 응답을 클라이언트에 전송
-  } catch (error) { // 에러 발생시
+  } catch (error) {
+    // 에러 발생 시
     console.error(error);
     res.status(500).json({ message: "서버 오류가 발생했습니다." });
   }

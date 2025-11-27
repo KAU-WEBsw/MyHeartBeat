@@ -1,18 +1,22 @@
 // React Router를 사용하여 페이지 라우팅 설정
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import MainPage from "./pages/MainPage";
+import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import MainPage from "./pages/MainPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import AuctionCreatePage from "./pages/AuctinoCreatePage";
 
 function App() {
   return (
-    <BrowserRouter> 
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/main" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/main" element={<MainPage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/auction/new" element={<AuctionCreatePage />} />
       </Routes>
     </BrowserRouter>
   );
