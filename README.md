@@ -45,9 +45,9 @@ npm start
 
 ### 1️⃣ .env 파일 설정
 
-1. 프로젝트 루트에 있는 `.env.example` 파일의 이름을 `.env` 로 변경하세요.
+1. `server` 폴더에 있는 `.env.example` 파일의 이름을 `.env` 로 변경하세요.
 
-2. `.env` 파일을 열어서 본인의 MySQL 비밀번호를 입력하세요:
+2. `.env` 파일에 다음 내용을 입력하세요 (MySQL 비밀번호를 실제 값으로 변경):
 
 ```env
 DB_HOST=localhost
@@ -107,12 +107,13 @@ MyHeartBeat/
    │  │  ├─ Header.js
    │  │  └─ Header.css
    │  └─ pages/
-   │     ├─ MainPage.js   # 메인 페이지 (경매 홈)
-   │     └─ MainPage.css
-   ├─ package.json        # 프론트 의존성 관리
-   └─ README.md           # (선택) 프론트 설명 문서
-
-
+   │     ├─ LandingPage.js      # 랜딩 페이지
+   │     ├─ LoginPage.js        # 로그인 페이지
+   │     ├─ SignupPage.js        # 회원가입 페이지
+   │     ├─ MainPage.js         # 메인 페이지 (경매 홈)
+   │     ├─ ProductDetailPage.js # 상품 상세 페이지
+   │     └─ AuctionCreatePage.js # 경매 등록 페이지
+   └─ package.json              # 프론트 의존성 관리
 ```
 
 
