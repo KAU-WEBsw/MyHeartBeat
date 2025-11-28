@@ -1,3 +1,4 @@
+/* 전체 헤더 */
 .header {
   height: 64px;
   background-color: #fff;
@@ -8,34 +9,26 @@
   padding: 0 24px;
 }
 
-/* 왼쪽 */
+/* 왼쪽 로고 영역 */
 .header-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
 }
 
-/* 🔥 오른쪽 width 제거 → 한 줄로 정렬 */
-.header-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px; /* 버튼·아바타 간격 */
-}
-
-/* 로고 텍스트 */
 .logo-text {
   font-size: 20px;
   font-weight: bold;
 }
 
+/* 중앙 검색창 영역 */
 .header-center {
   flex: 1;
   display: flex;
   justify-content: center;
 }
 
-/* 검색창 */
 .search-input {
   width: 100%;
   max-width: 520px;
@@ -43,11 +36,34 @@
   padding: 0 16px;
   border: 1px solid #c9ccd2;
   border-radius: 8px;
-  font-size: 14px;
   background-color: #f9fafb;
+  font-size: 14px;
 }
 
-/* 🔵 텍스트만 있는 경매 등록 버튼 */
+/* 오른쪽 버튼 영역 */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 텍스트 버튼 (경매 리스트, 마이페이지) */
+.header-text-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.header-text-btn:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+/* 파란색 강조 버튼 (경매 등록) */
 .register-text-btn {
   background: none;
   border: none;
@@ -55,38 +71,20 @@
   color: #2563eb;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
 }
 
 .register-text-btn:hover {
   text-decoration: underline;
 }
 
-/* 프로필 동그라미 */
+/* 프로필 */
 .profile-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   background: #d1d5db;
+  border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 13px;
+  justify-content: center;
   font-weight: 600;
-}
-
-/* 공통 텍스트 버튼 (메뉴용) */
-.header-text-btn {
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: #4b5563;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-}
-
-.header-text-btn:hover {
-  color: #2563eb;
-  text-decoration: underline;
 }
