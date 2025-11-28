@@ -88,13 +88,13 @@ INSERT INTO auctions (
     immediate_purchase_price,
     status, start_time, end_time
 ) VALUES
-(1, 1, '중고 아이패드 판매', '깨끗하게 사용한 아이패드입니다.', 'https://istore.xcache.kinxcdn.com/prd/data/goods/1/2024/11/342_temp_17307911200801large.jpg',
+(1, 1, '중고 아이패드 판매 중고 아이패드 판매', '깨끗하게 사용한 아이패드입니다.', 'https://istore.xcache.kinxcdn.com/prd/data/goods/1/2024/11/342_temp_17307911200801large.jpg',
  200000, 200000, 300000,
- 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY)
+ 'ongoing', '2024-12-20 10:00:00', '2025-11-28 21:24:10'
 ),
 (2, 3, '유화 그림 판매', '직접 그린 유화 작품입니다.', 'https://example.com/art.jpg',
  50000, 50000, NULL,
- 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY)
+ 'ongoing', '2024-12-20 10:00:00', '2024-12-25 18:00:00'
 );
 
 -- bids (기본 예시)
