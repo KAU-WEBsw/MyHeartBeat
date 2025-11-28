@@ -1,20 +1,22 @@
 // frontend/src/pages/ProductDetailPage.js
+// 경매 상품 상세 페이지 컴포넌트
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./ProductDetailPage.module.css";
 
 function ProductDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // URL에서 경매 ID 가져오기
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null);
-  const [bids, setBids] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [bidAmount, setBidAmount] = useState("");
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  // 상태 관리
+  const [product, setProduct] = useState(null); // 경매 상품 정보
+  const [bids, setBids] = useState([]); // 입찰 내역
+  const [error, setError] = useState(null); // 에러 상태
+  const [bidAmount, setBidAmount] = useState(""); // 입찰 금액 입력값
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 }); // 남은 시간
 
+  // 경매 정보 조회
   useEffect(() => {
     let isMounted = true;
 
@@ -33,11 +35,9 @@ function ProductDetailPage() {
 
         setProduct(data);
         setBids(data.bids ?? []);
-        setLoading(false);
       } catch (err) {
         if (!isMounted) return;
         setError(err.message);
-        setLoading(false);
       }
     }
 
@@ -49,15 +49,26 @@ function ProductDetailPage() {
 
   // 타이머 계산
   useEffect(() => {
-    if (!product?.end_time) return;
+    if (!product?.end_time || product.status === 'ended') return;
 
-    const calculateTimeLeft = () => {
+    const calculateTimeLeft = async () => {
       const now = new Date().getTime();
       const end = new Date(product.end_time).getTime();
       const difference = end - now;
 
       if (difference <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // 경매 시간이 끝나면 경매 정보 다시 불러오기 (자동 종료 처리)
+        try {
+          const res = await fetch(`http://localhost:4000/api/auctions/${id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setProduct(data);
+            setBids(data.bids ?? []);
+          }
+        } catch (error) {
+          console.error(error);
+        }
         return;
       }
 
@@ -73,19 +84,22 @@ function ProductDetailPage() {
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [product?.end_time]);
+  }, [product?.end_time, product?.status, id]);
 
+  // 입찰 금액 입력 핸들러 (숫자만 허용)
   const handleBidChange = (e) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
     setBidAmount(value);
   };
 
+  // 입찰 금액 포맷팅 (천 단위 콤마)
   const formatBidAmount = (value) => {
     if (!value) return "";
     return Number(value).toLocaleString();
   };
 
-  const handleBidSubmit = (e) => {
+  // 입찰하기 핸들러
+  const handleBidSubmit = async (e) => {
     e.preventDefault();
     if (!product) return;
 
@@ -101,35 +115,98 @@ function ProductDetailPage() {
       return;
     }
 
-    alert("입찰 API는 추후 연동 예정입니다.");
-    setBidAmount("");
+    const bidderId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/auctions/${id}/bids`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bidderId: bidderId,
+          amount: value,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "입찰 실패");
+        return;
+      }
+
+      alert("입찰 성공!");
+      setBidAmount("");
+      
+      // 경매 정보 다시 불러오기
+      const refreshRes = await fetch(`http://localhost:4000/api/auctions/${id}`);
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setProduct(refreshData);
+        setBids(refreshData.bids ?? []);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("서버 오류가 발생했습니다.");
+    }
   };
 
-  const handleImmediatePurchase = () => {
-    if (!product?.immediate_purchase_price) {
-      alert("즉시 구매가가 설정되지 않았습니다.");
+  // 즉시 구매하기 핸들러
+  const handleImmediatePurchase = async () => {
+    // 즉시 구매가가 현재가보다 작거나 같으면 불가
+    if (Number(product.immediate_purchase_price) <= Number(product.current_price)) {
+      alert("현재가가 즉시 구매가보다 높아 즉시 구매할 수 없습니다.");
       return;
     }
-    alert("즉시 구매 API는 추후 연동 예정입니다.");
+
+    const buyerId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
+
+    if (!window.confirm(`정말 ${Number(product.immediate_purchase_price).toLocaleString()}원에 즉시 구매하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/auctions/${id}/purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          buyerId: buyerId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "즉시 구매 실패");
+        return;
+      }
+
+      alert("즉시 구매 성공!");
+      
+      // 경매 정보 다시 불러오기
+      const refreshRes = await fetch(`http://localhost:4000/api/auctions/${id}`);
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setProduct(refreshData);
+        setBids(refreshData.bids ?? []);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("서버 오류가 발생했습니다.");
+    }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.page}>
-        <Header />
-        <main className={styles.loadingState}>로딩 중...</main>
-      </div>
-    );
-  }
 
-  
+  // 에러 또는 상품 정보가 없을 때
   if (error || !product) {
     return (
       <div className={styles.page}>
         <Header />
         <main className={styles.errorState}>
           <p>{error ?? "상품 정보를 불러올 수 없습니다."}</p>
-          <button onClick={() => navigate(-1)}>돌아가기</button>
         </main>
       </div>
     );
@@ -144,7 +221,7 @@ function ProductDetailPage() {
         <nav className={styles.breadcrumb}>
           <span onClick={() => navigate("/")}>Home</span>
           <span className={styles.breadcrumbSeparator}>›</span>
-          <span className={styles.breadcrumbCurrent}>{product.category_name || "Art & Collectibles"}</span>
+          <span className={styles.breadcrumbCurrent}>{product.category_name}</span>
         </nav>
 
         <div className={styles.content}>
@@ -189,76 +266,66 @@ function ProductDetailPage() {
                   </div>
                 </div>
 
-                {/* Timer */}
-                <div className={styles.timerBox}>
-                  <div className={styles.timerLabel}>남은 경매 시간</div>
-                  <div className={styles.timer}>
-                    <div className={styles.timerUnit}>
-                      <div className={styles.timerValue}>{String(timeLeft.days).padStart(2, "0")}</div>
-                      <div className={styles.timerLabel}>일</div>
-                    </div>
-                    <div className={styles.timerUnit}>
-                      <div className={styles.timerValue}>{String(timeLeft.hours).padStart(2, "0")}</div>
-                      <div className={styles.timerLabel}>시</div>
-                    </div>
-                    <div className={styles.timerUnit}>
-                      <div className={styles.timerValue}>{String(timeLeft.minutes).padStart(2, "0")}</div>
-                      <div className={styles.timerLabel}>분</div>
-                    </div>
-                    <div className={styles.timerUnit}>
-                      <div className={styles.timerValue}>{String(timeLeft.seconds).padStart(2, "0")}</div>
-                      <div className={styles.timerLabel}>초</div>
+                {/* Timer or Ended Status */}
+                {product.status === 'ended' ? (
+                  <div className={styles.timerBox}>
+                    <div className={styles.timerLabel}>경매 종료</div>
+                    <div className={styles.endedInfo}>
+                      <div className={styles.winningPrice}>
+                        낙찰가: {Number(product.winning_bid_amount || product.current_price).toLocaleString()}원
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className={styles.timerBox}>
+                    <div className={styles.timerLabel}>남은 경매 시간</div>
+                    <div className={styles.timer}>
+                      {String(timeLeft.days).padStart(2, "0")}일 {String(timeLeft.hours).padStart(2, "0")}시 {String(timeLeft.minutes).padStart(2, "0")}분 {String(timeLeft.seconds).padStart(2, "0")}초
+                    </div>
+                  </div>
+                )}
 
                 {/* Bid Form */}
-                <div className={styles.bidSection}>
-                  <label className={styles.bidLabel}>희망 입찰가</label>
-                  <form className={styles.bidForm} onSubmit={handleBidSubmit}>
-                    <div className={styles.bidInputWrapper}>
-                      <span className={styles.currencySymbol}>₩</span>
-                      <input
-                        type="text"
-                        value={formatBidAmount(bidAmount)}
-                        onChange={handleBidChange}
-                        placeholder="13,000"
-                        className={styles.bidInput}
-                      />
-                      <button type="submit" className={styles.bidButton}>
-                        입찰
-                      </button>
+                {product.status !== 'ended' && (
+                  <>
+                    <div className={styles.bidSection}>
+                      <label className={styles.bidLabel}>희망 입찰가</label>
+                      <form className={styles.bidForm} onSubmit={handleBidSubmit}>
+                        <div className={styles.bidInputWrapper}>
+                          <input
+                            type="text"
+                            value={formatBidAmount(bidAmount)}
+                            onChange={handleBidChange}
+                            className={styles.bidInput}
+                          />
+                          <button type="submit" className={styles.bidButton}>
+                            입찰
+                          </button>
+                        </div>
+                      </form>
+                      <div className={styles.bidderCount}>입찰자 : {bids.length}명</div>
                     </div>
-                  </form>
-                  <div className={styles.bidderCount}>입찰자 : {bids.length}명</div>
-                </div>
 
-                {/* Immediate Purchase Button */}
-                {product.immediate_purchase_price && (
-                  <button 
-                    className={styles.immediatePurchaseButton}
-                    onClick={handleImmediatePurchase}
-                  >
-                    즉시 구매하기
-                  </button>
+                    {/* Immediate Purchase Button */}
+                    {product.immediate_purchase_price && (
+                      <button 
+                        className={styles.immediatePurchaseButton}
+                        onClick={handleImmediatePurchase}
+                        disabled={Number(product.immediate_purchase_price) <= Number(product.current_price)}
+                      >
+                        즉시 구매하기
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </section>
 
             {/* Seller Info */}
             <section className={styles.sellerInfo}>
-              <h3 className={styles.sellerTitle}>판매자 정보</h3>
-              <div className={styles.sellerProfile}>
-                <div className={styles.sellerAvatar}>
-                  {product.seller_nickname?.[0] || "?"}
-                </div>
-                <div className={styles.sellerDetails}>
-                  <div className={styles.sellerName}>{product.seller_nickname || "익명"}</div>
-                </div>
-              </div>
-              <div className={styles.sellerStats}>
-                <span>경매 개수</span>
-                <span className={styles.sellerStatValue}>1,247</span>
+              <div className={styles.sellerRow}>
+                <span className={styles.sellerTitle}>판매자 정보</span>
+                <span className={styles.sellerName}>{product.seller_nickname || "익명"}</span>
               </div>
             </section>
           </div>
@@ -268,13 +335,7 @@ function ProductDetailPage() {
         <section className={styles.descriptionSection}>
           <h2 className={styles.descriptionTitle}>물품 설명</h2>
           <div className={styles.descriptionContent}>
-            <p>
-              {product.description || 
-                "This exquisite 19th-century oil painting depicts a serene landscape scene featuring rolling mountains, a tranquil lake, and dramatic cloud formations. The artwork showcases the romantic style characteristic of the period, with rich earth tones and masterful use of light and shadow."}
-            </p>
-            <p>
-              The painting is housed in its original ornate gilt frame, which shows some age-appropriate wear but remains structurally sound. The canvas has been professionally cleaned and shows excellent color retention throughout.
-            </p>
+            <p>{product.description || "설명이 없습니다."}</p>
           </div>
         </section>
       </main>
