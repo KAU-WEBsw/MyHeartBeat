@@ -45,9 +45,9 @@ npm start
 
 ### 1️⃣ .env 파일 설정
 
-1. `server` 폴더에 있는 `.env.example` 파일의 이름을 `.env` 로 변경하세요.
+1. `/server` 폴더에 `.env` 파일을 생성하세요.
 
-2. `.env` 파일에 다음 내용을 입력하세요 (MySQL 비밀번호를 실제 값으로 변경):
+2. 다음 내용을 입력하세요 (MySQL 비밀번호를 실제 값으로 변경):
 
 ```env
 DB_HOST=localhost
