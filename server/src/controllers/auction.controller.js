@@ -5,10 +5,10 @@ const { buildConditions, buildListQuery } = require("../utils/auction.filters");
 
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
+//  - start_time은 DB에서 DEFAULT CURRENT_TIMESTAMP 사용
 // ==========================================================
 exports.createAuction = async (req, res) => {
   try {
-    // 클라이언트에서 전달된 데이터
     const {
       title,
       categoryId,
@@ -16,39 +16,32 @@ exports.createAuction = async (req, res) => {
       imageUrl,
       startPrice,
       immediatePurchasePrice,
-      startTime,
       endTime,
       sellerId,
     } = req.body;
 
-    // 필수값 체크
+    // ✅ 필수값 체크 (startTime은 더 이상 필요 없음)
     if (
       !sellerId ||
       !title ||
-      !startPrice ||
-      !startTime ||
+      categoryId == null ||
+      startPrice == null ||
       !endTime
     ) {
       return res.status(400).json({ message: "필수 값이 누락되었습니다." });
-    }
-
-    // 시간 유효성 체크
-    if (new Date(startTime) >= new Date(endTime)) {
-      return res
-        .status(400)
-        .json({ message: "종료 시간은 시작 시간보다 늦어야 합니다." });
     }
 
     const status = "ongoing"; // 기본 상태 = 진행중
     const currentPrice = startPrice; // 현재가 = 시작가로 초기화
 
     // DB INSERT 실행
+    // ⬇️ start_time 컬럼은 빼고, DB의 DEFAULT CURRENT_TIMESTAMP 사용
     const [result] = await db.query(
       `INSERT INTO auctions
         (seller_id, category_id, title, description, image_url,
-        start_price, current_price,
-        immediate_purchase_price, status, start_time, end_time)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         start_price, current_price,
+         immediate_purchase_price, status, end_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         sellerId,
         categoryId || null,
@@ -59,7 +52,6 @@ exports.createAuction = async (req, res) => {
         currentPrice,
         immediatePurchasePrice || null,
         status,
-        startTime,
         endTime,
       ]
     );
@@ -104,7 +96,7 @@ exports.getAuctionById = async (req, res) => {
     const auction = auctions[0]; // 첫 번째 상품 정보만 반환
 
     // 경매 종료 시간 체크 및 자동 종료 처리
-    if (auction.status === 'ongoing') {
+    if (auction.status === "ongoing") {
       const now = new Date();
       const endTime = new Date(auction.end_time);
       if (now >= endTime) {
@@ -117,14 +109,14 @@ exports.getAuctionById = async (req, res) => {
            LIMIT 1`,
           [id]
         );
-        
+
         let winnerId = null;
         let winningAmount = null;
         if (maxBids.length > 0) {
           winnerId = maxBids[0].bidder_id;
           winningAmount = maxBids[0].amount;
         }
-        
+
         // 경매 상태를 ended로 변경
         await db.query(
           `UPDATE auctions 
@@ -135,7 +127,7 @@ exports.getAuctionById = async (req, res) => {
            WHERE id = ?`,
           [winnerId, winningAmount, winningAmount, id]
         );
-        
+
         // 업데이트된 경매 정보 다시 조회
         const [updatedAuctions] = await db.query(
           `SELECT 
@@ -170,12 +162,12 @@ exports.getAuctionById = async (req, res) => {
     // 경매가 종료된 경우 DB의 current_price를 사용 (즉시 구매 등으로 업데이트된 값)
     // 진행 중인 경우 입찰 내역의 최고가를 사용
     let currentPrice;
-    if (auction.status === 'ended') {
+    if (auction.status === "ended") {
       currentPrice = Number(auction.current_price);
     } else {
       currentPrice = Number(auction.start_price);
       if (bids.length > 0) {
-        const maxBid = Math.max(...bids.map(bid => Number(bid.amount)));
+        const maxBid = Math.max(...bids.map((bid) => Number(bid.amount)));
         currentPrice = maxBid;
       }
     }
@@ -201,7 +193,15 @@ exports.getAuctionById = async (req, res) => {
 // ==========================================================
 exports.getAuctions = async (req, res) => {
   try {
-    const { status, category, minPrice, maxPrice, page = 1, pageSize = 9, userId } = req.query;
+    const {
+      status,
+      category,
+      minPrice,
+      maxPrice,
+      page = 1,
+      pageSize = 9,
+      userId,
+    } = req.query;
 
     const pageNum = Number(page) || 1;
     const size = Number(pageSize) || 9;
@@ -224,12 +224,22 @@ exports.getAuctions = async (req, res) => {
 
     let items;
     try {
-      const selectSql = buildListQuery({ withLikes, whereClause: filter.whereClause });
-      items = await db.query(selectSql, [...params, size, offset]).then((r) => r[0]);
+      const selectSql = buildListQuery({
+        withLikes,
+        whereClause: filter.whereClause,
+      });
+      items = await db
+        .query(selectSql, [...params, size, offset])
+        .then((r) => r[0]);
     } catch (err) {
       if (err.code === "ER_NO_SUCH_TABLE" && err.message.includes("likes")) {
-        const selectSql = buildListQuery({ withLikes: false, whereClause: filter.whereClause });
-        items = await db.query(selectSql, [...filter.values, size, offset]).then((r) => r[0]);
+        const selectSql = buildListQuery({
+          withLikes: false,
+          whereClause: filter.whereClause,
+        });
+        items = await db
+          .query(selectSql, [...filter.values, size, offset])
+          .then((r) => r[0]);
       } else {
         throw err;
       }
@@ -248,7 +258,9 @@ exports.getAuctions = async (req, res) => {
 // ==========================================================
 exports.getCategories = async (_req, res) => {
   try {
-    const [rows] = await db.query("SELECT name FROM categories ORDER BY name ASC");
+    const [rows] = await db.query(
+      "SELECT name FROM categories ORDER BY name ASC"
+    );
     res.json({ categories: rows.map((r) => r.name) });
   } catch (error) {
     console.error(error);
@@ -266,14 +278,15 @@ exports.createBid = async (req, res) => {
 
     // 필수값 체크
     if (!bidderId || !amount) {
-      return res.status(400).json({ message: "입찰자 ID와 입찰 금액을 입력해주세요." });
+      return res
+        .status(400)
+        .json({ message: "입찰자 ID와 입찰 금액을 입력해주세요." });
     }
 
     // 경매 정보 조회
-    const [auctions] = await db.query(
-      `SELECT * FROM auctions WHERE id = ?`,
-      [id]
-    );
+    const [auctions] = await db.query(`SELECT * FROM auctions WHERE id = ?`, [
+      id,
+    ]);
 
     if (auctions.length === 0) {
       return res.status(404).json({ message: "경매를 찾을 수 없습니다." });
@@ -282,7 +295,7 @@ exports.createBid = async (req, res) => {
     const auction = auctions[0];
 
     // 경매 상태 체크
-    if (auction.status !== 'ongoing') {
+    if (auction.status !== "ongoing") {
       return res.status(400).json({ message: "종료된 경매입니다." });
     }
 
@@ -295,7 +308,9 @@ exports.createBid = async (req, res) => {
 
     // 판매자 체크
     if (Number(auction.seller_id) === Number(bidderId)) {
-      return res.status(400).json({ message: "자신의 경매에는 입찰할 수 없습니다." });
+      return res
+        .status(400)
+        .json({ message: "자신의 경매에는 입찰할 수 없습니다." });
     }
 
     // 현재 최고 입찰가 조회
@@ -308,8 +323,8 @@ exports.createBid = async (req, res) => {
 
     // 입찰 금액 체크
     if (Number(amount) < minBidAmount) {
-      return res.status(400).json({ 
-        message: `입찰 금액은 최소 ${minBidAmount.toLocaleString()}원 이상이어야 합니다.` 
+      return res.status(400).json({
+        message: `입찰 금액은 최소 ${minBidAmount.toLocaleString()}원 이상이어야 합니다.`,
       });
     }
 
@@ -320,10 +335,10 @@ exports.createBid = async (req, res) => {
     );
 
     // 경매 현재가 업데이트
-    await db.query(
-      `UPDATE auctions SET current_price = ? WHERE id = ?`,
-      [amount, id]
-    );
+    await db.query(`UPDATE auctions SET current_price = ? WHERE id = ?`, [
+      amount,
+      id,
+    ]);
 
     res.status(201).json({
       message: "입찰 성공",
@@ -350,10 +365,9 @@ exports.purchaseAuction = async (req, res) => {
     }
 
     // 경매 정보 조회
-    const [auctions] = await db.query(
-      `SELECT * FROM auctions WHERE id = ?`,
-      [id]
-    );
+    const [auctions] = await db.query(`SELECT * FROM auctions WHERE id = ?`, [
+      id,
+    ]);
 
     if (auctions.length === 0) {
       return res.status(404).json({ message: "경매를 찾을 수 없습니다." });
@@ -362,7 +376,7 @@ exports.purchaseAuction = async (req, res) => {
     const auction = auctions[0];
 
     // 경매 상태 체크
-    if (auction.status !== 'ongoing') {
+    if (auction.status !== "ongoing") {
       return res.status(400).json({ message: "종료된 경매입니다." });
     }
 
@@ -375,17 +389,25 @@ exports.purchaseAuction = async (req, res) => {
 
     // 즉시 구매가 체크
     if (!auction.immediate_purchase_price) {
-      return res.status(400).json({ message: "즉시 구매가가 설정되지 않았습니다." });
+      return res
+        .status(400)
+        .json({ message: "즉시 구매가가 설정되지 않았습니다." });
     }
 
     // 즉시 구매가가 현재가보다 작거나 같으면 불가
-    if (Number(auction.immediate_purchase_price) <= Number(auction.current_price)) {
-      return res.status(400).json({ message: "현재가가 즉시 구매가보다 높아 즉시 구매할 수 없습니다." });
+    if (
+      Number(auction.immediate_purchase_price) <= Number(auction.current_price)
+    ) {
+      return res.status(400).json({
+        message: "현재가가 즉시 구매가보다 높아 즉시 구매할 수 없습니다.",
+      });
     }
 
     // 판매자 체크
     if (Number(auction.seller_id) === Number(buyerId)) {
-      return res.status(400).json({ message: "자신의 경매는 즉시 구매할 수 없습니다." });
+      return res
+        .status(400)
+        .json({ message: "자신의 경매는 즉시 구매할 수 없습니다." });
     }
 
     // 경매 종료 처리 및 현재가를 즉시 구매가로 변경
@@ -396,7 +418,12 @@ exports.purchaseAuction = async (req, res) => {
            winning_bid_amount = ?,
            current_price = ?
        WHERE id = ?`,
-      [buyerId, auction.immediate_purchase_price, auction.immediate_purchase_price, id]
+      [
+        buyerId,
+        auction.immediate_purchase_price,
+        auction.immediate_purchase_price,
+        id,
+      ]
     );
 
     res.status(200).json({
