@@ -21,7 +21,6 @@ function AuctionCreatePage() {
     description: "",
     startPrice: "",
     buyNowPrice: "",
-    startDate: "",
     endDate: "",
   });
 
@@ -58,8 +57,7 @@ function AuctionCreatePage() {
           immediatePurchasePrice: form.buyNowPrice
             ? Number(form.buyNowPrice)
             : null,
-          startTime: form.startDate,
-          endTime: form.endDate,
+          endTime: form.endDate, // ✅ 시작 시간 제거, 종료 시간만 전송
           sellerId: 1, // TODO: 로그인한 사용자 id로 변경
         }),
       });
@@ -208,34 +206,19 @@ function AuctionCreatePage() {
                 </div>
               </div>
 
-              <div className={styles.gridTwo}>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>
-                    경매 시작 시간 <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    className={styles.input}
-                    type="datetime-local"
-                    name="startDate"
-                    value={form.startDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>
-                    경매 종료 시간 <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    className={styles.input}
-                    type="datetime-local"
-                    name="endDate"
-                    value={form.endDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+              {/* 🔻 여기부터: 종료 시간만 남김 */}
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>
+                  경매 종료 시간 <span className={styles.required}>*</span>
+                </label>
+                <input
+                  className={styles.input}
+                  type="datetime-local"
+                  name="endDate"
+                  value={form.endDate}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </section>
           </div>
