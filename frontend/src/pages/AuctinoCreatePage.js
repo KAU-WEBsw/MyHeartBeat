@@ -42,6 +42,11 @@ function AuctionCreatePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // MySQL DATETIME 형식으로 살짝 변환
+    const endTime = form.endDate
+      ? form.endDate.replace("T", " ") + ":00"
+      : null;
+
     try {
       const res = await fetch("http://localhost:4000/api/auctions", {
         method: "POST",
@@ -57,7 +62,7 @@ function AuctionCreatePage() {
           immediatePurchasePrice: form.buyNowPrice
             ? Number(form.buyNowPrice)
             : null,
-          endTime: form.endDate, // ✅ 시작 시간 제거, 종료 시간만 전송
+          endTime, // ✅ 종료 시간만 전송
           sellerId: 1, // TODO: 로그인한 사용자 id로 변경
         }),
       });
@@ -70,9 +75,8 @@ function AuctionCreatePage() {
       }
 
       alert("경매 등록 완료!");
-      // 상세 페이지로 보내고 싶으면:
-      // navigate(`/product/${data.auctionId}`);
-      navigate("/main");
+      // ✅ 등록 후 경매 목록 페이지로 이동
+      navigate("/auction/list");
     } catch (error) {
       console.error(error);
       alert("서버 오류 발생");
@@ -206,7 +210,7 @@ function AuctionCreatePage() {
                 </div>
               </div>
 
-              {/* 🔻 여기부터: 종료 시간만 남김 */}
+              {/* 종료 시간 */}
               <div className={styles.fieldGroup}>
                 <label className={styles.label}>
                   경매 종료 시간 <span className={styles.required}>*</span>

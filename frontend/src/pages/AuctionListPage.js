@@ -5,7 +5,8 @@ import styles from "./AuctionListPage.module.css";
 //import placeholder from "../assets/placeholder.svg";
 const placeholder = "/assets/placeholder.svg";
 
-const formatCurrency = (value = 0) => `₩${Number(value).toLocaleString("ko-KR")}`;
+const formatCurrency = (value = 0) =>
+  `₩${Number(value).toLocaleString("ko-KR")}`;
 
 const timeLeft = (end) => {
   const endDate = new Date(end);
@@ -53,7 +54,9 @@ function AuctionListPage() {
         setTotalCount(total);
         setTotalPages(Math.max(1, Math.ceil(total / size)));
         // 응답에 포함된 카테고리로 갱신
-        const cats = Array.from(new Set(items.map((i) => i.category_name).filter(Boolean)));
+        const cats = Array.from(
+          new Set(items.map((i) => i.category_name).filter(Boolean))
+        );
         if (cats.length) setCategories(cats);
       }
     } catch (err) {
@@ -145,7 +148,9 @@ function AuctionListPage() {
               {categoryList.map((cat) => (
                 <li
                   key={cat}
-                  className={categoryFilter === cat ? styles.categoryActive : ""}
+                  className={
+                    categoryFilter === cat ? styles.categoryActive : ""
+                  }
                   onClick={() => handleCategory(cat)}
                 >
                   {cat}
@@ -194,7 +199,9 @@ function AuctionListPage() {
                       setPage(1);
                     }}
                   />
-                  <span>{s === "all" ? "전체" : s === "ongoing" ? "진행중" : "종료"}</span>
+                  <span>
+                    {s === "all" ? "전체" : s === "ongoing" ? "진행중" : "종료"}
+                  </span>
                 </label>
               ))}
             </div>
@@ -216,23 +223,32 @@ function AuctionListPage() {
 
           <div className={styles.grid}>
             {filtered.map((item) => {
-              const ended = item.status === "ended" || timeLeft(item.end_time) === "종료";
+              const ended =
+                item.status === "ended" || timeLeft(item.end_time) === "종료";
               return (
                 <article className={styles.card} key={item.id}>
                   <div className={styles.cardImage}>
                     <img src={item.image_url || placeholder} alt={item.title} />
-                    <span className={`${styles.status} ${ended ? styles.statusEnded : styles.statusOngoing}`}>
+                    <span
+                      className={`${styles.status} ${
+                        ended ? styles.statusEnded : styles.statusOngoing
+                      }`}
+                    >
                       {ended ? "종료" : "입찰중"}
                     </span>
                   </div>
                   <div className={styles.cardBody}>
                     <div className={styles.cardTop}>
                       <div>
-                        <p className={styles.category}>{item.category_name || "카테고리"}</p>
+                        <p className={styles.category}>
+                          {item.category_name || "카테고리"}
+                        </p>
                         <h3>{item.title}</h3>
                       </div>
                       <button
-                        className={`${styles.wish} ${item.liked ? styles.wishActive : ""}`}
+                        className={`${styles.wish} ${
+                          item.liked ? styles.wishActive : ""
+                        }`}
                         onClick={() => toggleLike(item.id, Boolean(item.liked))}
                       >
                         {item.liked ? "❤" : "♡"}
@@ -241,7 +257,9 @@ function AuctionListPage() {
                     <div className={styles.meta}>
                       <div>
                         <p className={styles.label}>현재 입찰가</p>
-                        <p className={styles.price}>{formatCurrency(item.current_price)}</p>
+                        <p className={styles.price}>
+                          {formatCurrency(item.current_price)}
+                        </p>
                       </div>
                       <div className={styles.metaCol}>
                         <p className={styles.label}>입찰 수</p>
@@ -249,7 +267,9 @@ function AuctionListPage() {
                       </div>
                       <div className={styles.metaCol}>
                         <p className={styles.label}>남은 시간</p>
-                        <p className={ended ? styles.danger : undefined}>{timeLeft(item.end_time)}</p>
+                        <p className={ended ? styles.danger : undefined}>
+                          {timeLeft(item.end_time)}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -266,7 +286,10 @@ function AuctionListPage() {
           </div>
 
           <div className={styles.pagination}>
-            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               &lt;
             </button>
             {pages.map((num) => (
