@@ -43,7 +43,10 @@ function LandingPage() {
         </p>
 
         <div className={styles.landingButtons}>
-          <button className={styles.startBtn} onClick={() => navigate("/main")}>
+          <button
+            className={styles.startBtn}
+            onClick={() => navigate("/auction/list")}
+          >
             시작하기 🚀
           </button>
 

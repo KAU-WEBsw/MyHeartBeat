@@ -74,3 +74,19 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+/* 공통 텍스트 버튼 (메뉴용) */
+.header-text-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.header-text-btn:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}

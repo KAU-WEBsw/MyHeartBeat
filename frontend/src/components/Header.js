@@ -1,4 +1,4 @@
-// src/components/Header.js
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 
@@ -7,7 +7,11 @@ function Header() {
 
   return (
     <header className="header">
-      <div className="header-left">
+      <div
+        className="header-left"
+        onClick={() => navigate("/")}
+        style={{ cursor: "pointer" }}
+      >
         <div className="logo-icon">🔨</div>
         <span className="logo-text">내맘똑</span>
       </div>
@@ -20,7 +24,20 @@ function Header() {
       </div>
 
       <div className="header-right">
-        {/* 배경 없는 텍스트 버튼 */}
+        {/* 경매 리스트 버튼 */}
+        <button
+          className="header-text-btn"
+          onClick={() => navigate("/auction/list")}
+        >
+          경매 리스트
+        </button>
+
+        {/* 마이페이지 버튼 */}
+        <button className="header-text-btn" onClick={() => navigate("/mypage")}>
+          마이페이지
+        </button>
+
+        {/* 경매 등록 버튼 */}
         <button
           className="register-text-btn"
           onClick={() => navigate("/auction/new")}
@@ -28,6 +45,7 @@ function Header() {
           경매 등록
         </button>
 
+        {/* 프로필 */}
         <div className="profile-avatar">
           <span>MS</span>
         </div>
