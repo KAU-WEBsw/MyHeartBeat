@@ -1,6 +1,6 @@
 // frontend/src/pages/AuctionCreatePage.js
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./AuctionCreatePage.module.css";
 
@@ -12,8 +12,19 @@ const CATEGORY_LABELS = {
   4: "취미 / 기타",
 };
 
+const toDateTimeLocal = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (num) => String(num).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 function AuctionCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditMode = useMemo(() => Boolean(editId), [editId]);
 
   const [form, setForm] = useState({
     title: "",
@@ -22,6 +33,7 @@ function AuctionCreatePage() {
     startPrice: "",
     buyNowPrice: "",
     endDate: "",
+    imageUrl: "",
   });
 
   const [previewImage, setPreviewImage] = useState(null);
@@ -36,8 +48,39 @@ function AuctionCreatePage() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewImage(url);
+    setForm((prev) => ({ ...prev, imageUrl: url }));
     // TODO: 나중에 실제 파일 업로드 구현
   };
+
+  useEffect(() => {
+    if (!editId) return;
+
+    const fetchAuction = async () => {
+      try {
+        const res = await fetch(`/api/auctions/${editId}`);
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.message || "경매 정보를 불러오지 못했습니다.");
+          return;
+        }
+        setForm({
+          title: data.title || "",
+          categoryId: data.category_id ? String(data.category_id) : "",
+          description: data.description || "",
+          startPrice: data.start_price ?? "",
+          buyNowPrice: data.immediate_purchase_price ?? "",
+          endDate: toDateTimeLocal(data.end_time),
+          imageUrl: data.image_url || "",
+        });
+        setPreviewImage(data.image_url || null);
+      } catch (error) {
+        console.error(error);
+        alert("경매 정보를 불러오지 못했습니다.");
+      }
+    };
+
+    fetchAuction();
+  }, [editId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,8 +91,9 @@ function AuctionCreatePage() {
       : null;
 
     try {
-      const res = await fetch("http://localhost:4000/api/auctions", {
-        method: "POST",
+      const endpoint = isEditMode ? `/api/auctions/${editId}` : "/api/auctions";
+      const res = await fetch(endpoint, {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -57,8 +101,8 @@ function AuctionCreatePage() {
           title: form.title,
           categoryId: form.categoryId ? Number(form.categoryId) : null,
           description: form.description,
-          imageUrl: null, // TODO: 이미지 업로드 붙이면 실제 URL
-          startPrice: Number(form.startPrice),
+          imageUrl: form.imageUrl || null, // TODO: 이미지 업로드 붙이면 실제 URL
+          startPrice: form.startPrice !== "" ? Number(form.startPrice) : null,
           immediatePurchasePrice: form.buyNowPrice
             ? Number(form.buyNowPrice)
             : null,
@@ -70,13 +114,13 @@ function AuctionCreatePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "경매 등록 실패");
+        alert(data.message || `경매 ${isEditMode ? "수정" : "등록"} 실패`);
         return;
       }
 
-      alert("경매 등록 완료!");
-      // ✅ 등록 후 경매 목록 페이지로 이동
-      navigate("/auction/list");
+      alert(`경매 ${isEditMode ? "수정" : "등록"} 완료!`);
+      // ✅ 등록/수정 후 경매 상세 페이지로 이동
+      navigate(isEditMode ? `/product/${editId}` : "/auction/list");
     } catch (error) {
       console.error(error);
       alert("서버 오류 발생");
@@ -89,8 +133,8 @@ function AuctionCreatePage() {
 
       <main className={styles.main}>
         <div className={styles.pageHeader}>
-          <h1>경매 등록</h1>
-          <p>경매에 올릴 상품 정보를 자세히 입력해주세요.</p>
+          <h1>{isEditMode ? "경매 수정" : "경매 등록"}</h1>
+          <p>{isEditMode ? "기존 등록 내용을 수정합니다." : "경매에 올릴 상품 정보를 자세히 입력해주세요."}</p>
         </div>
 
         <form className={styles.layout} onSubmit={handleSubmit}>
@@ -277,7 +321,7 @@ function AuctionCreatePage() {
               </ul>
 
               <button type="submit" className={styles.submitButton}>
-                경매 등록
+                {isEditMode ? "경매 수정" : "경매 등록"}
               </button>
             </section>
           </div>

@@ -17,8 +17,6 @@ const timeLeft = (end) => {
   return `${days}일 ${hours}시간`;
 };
 
-const userId = 1; // TODO: 실제 로그인 사용자 ID로 대체
-
 function AuctionListPage() {
   const navigate = useNavigate();
   const [auctions, setAuctions] = useState([]);
@@ -32,32 +30,36 @@ function AuctionListPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [sortBy, setSortBy] = useState("latest");
 
   const fetchAuctions = async () => {
     const params = new URLSearchParams();
     params.append("page", page);
     params.append("pageSize", 9);
-    params.append("userId", userId);
     if (statusFilter !== "all") params.append("status", statusFilter);
     if (categoryFilter) params.append("category", categoryFilter);
     if (minPrice) params.append("minPrice", minPrice);
     if (maxPrice) params.append("maxPrice", maxPrice);
+    params.append("sort", sortBy);
 
     try {
       const res = await fetch(`/api/auctions?${params.toString()}`);
       const data = await res.json();
       if (res.ok) {
         const items = data.items || [];
-        setAuctions(items);
+        const now = Date.now();
+        const normalized = items.map((item) => {
+          const ended = new Date(item.end_time).getTime() <= now;
+          return {
+            ...item,
+            status: ended ? "ended" : item.status || "ongoing",
+          };
+        });
+        setAuctions(normalized);
         const total = data.total || items.length;
         const size = data.pageSize || 9;
         setTotalCount(total);
         setTotalPages(Math.max(1, Math.ceil(total / size)));
-        // 응답에 포함된 카테고리로 갱신
-        const cats = Array.from(
-          new Set(items.map((i) => i.category_name).filter(Boolean))
-        );
-        if (cats.length) setCategories(cats);
       }
     } catch (err) {
       console.error(err);
@@ -83,28 +85,16 @@ function AuctionListPage() {
   useEffect(() => {
     fetchAuctions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, categoryFilter, minPrice, maxPrice, page]);
-
-  const toggleLike = async (auctionId, liked) => {
-    try {
-      const res = await fetch("/api/likes", {
-        method: liked ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, auctionId }),
-      });
-      if (res.ok) {
-        setAuctions((prev) =>
-          prev.map((a) =>
-            a.id === auctionId ? { ...a, liked: liked ? 0 : 1 } : a
-          )
-        );
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  }, [statusFilter, categoryFilter, minPrice, maxPrice, page, sortBy]);
 
   const filtered = useMemo(() => auctions, [auctions]);
+
+  const statusLabel =
+    statusFilter === "ongoing"
+      ? "진행중인 경매"
+      : statusFilter === "ended"
+        ? "종료된 경매"
+        : "전체 경매";
 
   const handleCategory = (cat) => {
     setCategoryFilter(cat === categoryFilter ? "" : cat);
@@ -128,7 +118,7 @@ function AuctionListPage() {
 
   const categoryList = categories.length
     ? categories
-    : ["전자제품", "패션", "미술품", "기타"];
+    : ["명품 / 패션", "전자기기", "미술품 / 컬렉션", "취미 / 기타"];
 
   return (
     <div className={styles.page}>
@@ -212,9 +202,16 @@ function AuctionListPage() {
           <div className={styles.listHeader}>
             <div>
               <h2>경매 목록</h2>
-              <p>총 {totalCount}개의 경매가 진행중입니다</p>
+              <p>총 {totalCount}개의 {statusLabel}가 있습니다</p>
             </div>
-            <select className={styles.sortSelect} defaultValue="latest">
+            <select
+              className={styles.sortSelect}
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(1);
+              }}
+            >
               <option value="latest">최신순</option>
               <option value="popular">입찰수 많은 순</option>
               <option value="price">가격 높은 순</option>
@@ -234,7 +231,7 @@ function AuctionListPage() {
                         ended ? styles.statusEnded : styles.statusOngoing
                       }`}
                     >
-                      {ended ? "종료" : "입찰중"}
+                      {ended ? "종료" : "진행 중"}
                     </span>
                   </div>
                   <div className={styles.cardBody}>
@@ -245,14 +242,6 @@ function AuctionListPage() {
                         </p>
                         <h3>{item.title}</h3>
                       </div>
-                      <button
-                        className={`${styles.wish} ${
-                          item.liked ? styles.wishActive : ""
-                        }`}
-                        onClick={() => toggleLike(item.id, Boolean(item.liked))}
-                      >
-                        {item.liked ? "❤" : "♡"}
-                      </button>
                     </div>
                     <div className={styles.meta}>
                       <div>

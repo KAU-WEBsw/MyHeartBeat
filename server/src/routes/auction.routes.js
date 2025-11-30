@@ -11,6 +11,9 @@ router.get("/", auctionController.getAuctions);
 // 경매 등록
 router.post("/", auctionController.createAuction);
 
+// 경매 수정
+router.put("/:id", auctionController.updateAuction);
+
 // 경로 /:id로 요청이 오면 상품 상세 정보 함수 호출, !!경매 상세 조회!!
 router.get("/:id", auctionController.getAuctionById);
 

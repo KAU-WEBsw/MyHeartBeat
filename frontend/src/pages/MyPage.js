@@ -85,7 +85,6 @@ const emptyDashboard = {
   stats: { listed: 0, bidding: 0, wins: 0, totalAmount: 0 },
   myAuctions: [],
   bidHistory: [],
-  favorites: [],
 };
 
 function Badge({ status }) {
@@ -101,12 +100,17 @@ function MyPage() {
   const [data, setData] = useState(emptyDashboard);
   const [tab, setTab] = useState("all");
   const [activeNav, setActiveNav] = useState("auctions");
+  const [userIdState, setUserIdState] = useState(null);
   const auctionsRef = useRef(null);
   const bidsRef = useRef(null);
-  const favoritesRef = useRef(null);
   const navigate = useNavigate();
   const { userId } = useParams();
-  const targetUserId = userId || 1;
+  const targetUserId = userId || userIdState;
+  const computeStatus = (endTime) => {
+    const endDate = new Date(endTime);
+    if (Number.isNaN(endDate.getTime())) return "ongoing";
+    return endDate.getTime() <= Date.now() ? "ended" : "ongoing";
+  };
 
   const scrollTo = (ref, key) => {
     setActiveNav(key || activeNav);
@@ -116,6 +120,20 @@ function MyPage() {
   };
 
   useEffect(() => {
+    // 로그인 정보 로드
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed?.id) setUserIdState(String(parsed.id));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!targetUserId) return;
     const fetchDashboard = async () => {
       try {
         const res = await fetch(`/api/mypage/${targetUserId}`);
@@ -128,16 +146,25 @@ function MyPage() {
     fetchDashboard();
   }, [targetUserId]);
 
+  const myAuctionsWithStatus = useMemo(
+    () => (data.myAuctions || []).map((item) => ({ ...item, status: computeStatus(item.endTime) })),
+    [data.myAuctions]
+  );
+
+  const bidHistoryWithStatus = useMemo(
+    () => (data.bidHistory || []).map((item) => ({ ...item, status: computeStatus(item.endTime) })),
+    [data.bidHistory]
+  );
+
   const filteredMyAuctions = useMemo(() => {
-    if (tab === "all") return data.myAuctions || [];
-    if (tab === "ongoing") return (data.myAuctions || []).filter((a) => a.status === "ongoing");
-    return (data.myAuctions || []).filter((a) => a.status === "ended");
-  }, [data.myAuctions, tab]);
+    if (tab === "all") return myAuctionsWithStatus;
+    if (tab === "ongoing") return myAuctionsWithStatus.filter((a) => a.status === "ongoing");
+    return myAuctionsWithStatus.filter((a) => a.status === "ended");
+  }, [myAuctionsWithStatus, tab]);
 
   const navItems = [
     { key: "auctions", label: "내가 올린 경매", icon: icons.hammer, ref: auctionsRef },
     { key: "bids", label: "입찰 내역", icon: icons.calendar, ref: bidsRef },
-    { key: "favorites", label: "관심 목록", icon: icons.heart, ref: favoritesRef },
   ];
 
   const statCards = [
@@ -203,19 +230,19 @@ function MyPage() {
               className={`${styles.tabBtn} ${tab === "all" ? styles.tabActive : ""}`}
               onClick={() => setTab("all")}
             >
-              전체 ({data.myAuctions?.length || 0})
+              전체 ({myAuctionsWithStatus.length})
             </button>
             <button
               className={`${styles.tabBtn} ${tab === "ongoing" ? styles.tabActive : ""}`}
               onClick={() => setTab("ongoing")}
             >
-              진행 중 {(data.myAuctions || []).filter((a) => a.status === "ongoing").length}
+              진행 중 {myAuctionsWithStatus.filter((a) => a.status === "ongoing").length}
             </button>
             <button
               className={`${styles.tabBtn} ${tab === "ended" ? styles.tabActive : ""}`}
               onClick={() => setTab("ended")}
             >
-              종료 {(data.myAuctions || []).filter((a) => a.status === "ended").length}
+              종료 {myAuctionsWithStatus.filter((a) => a.status === "ended").length}
             </button>
           </div>
 
@@ -281,7 +308,7 @@ function MyPage() {
               <span>남은 시간</span>
               <span>상태</span>
             </div>
-            {(data.bidHistory || []).map((item) => (
+            {bidHistoryWithStatus.map((item) => (
               <div key={item.id} className={styles.tableRow}>
                 <div className={styles.productCell}>
                   <img src={item.image_url || placeholder} alt={item.title} />
@@ -297,39 +324,8 @@ function MyPage() {
                 <Badge status={item.status} />
               </div>
             ))}
-            <button className={styles.moreButton} onClick={() => navigate("/auction/list")}>더 보기 ▾</button>
           </div>
 
-          <div ref={favoritesRef} className={styles.sectionHeader}>
-            <h2>관심 목록</h2>
-          </div>
-          <div className={styles.table}>
-            <div className={styles.tableHead}>
-              <span>물건</span>
-              <span>내 입찰가</span>
-              <span>현재 최고가</span>
-              <span>입찰 수</span>
-              <span>남은 시간</span>
-              <span>상태</span>
-            </div>
-            {(data.favorites || []).map((item) => (
-              <div key={item.id} className={styles.tableRow}>
-                <div className={styles.productCell}>
-                  <img src={item.image_url || placeholder} alt={item.title} />
-                  <div>
-                    <p className={styles.productTitle}>{item.title}</p>
-                    <p className={styles.label}>{item.category}</p>
-                  </div>
-                </div>
-                <span className={styles.countStrong}>{formatCurrency(item.myBid)}</span>
-                <span className={styles.pricePrimary}>{formatCurrency(item.currentPrice)}</span>
-                <span className={styles.countStrong}>{item.bidCount}</span>
-                <span className={styles.timeDanger}>{timeLeft(item.endTime)}</span>
-                <Badge status={item.status} />
-              </div>
-            ))}
-            <button className={styles.moreButton} onClick={() => navigate("/auction/list")}>더 보기 ▾</button>
-          </div>
         </section>
       </main>
     </div>

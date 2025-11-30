@@ -2,6 +2,17 @@
 const db = require("../config/db");
 // 물품 목록 - 필터 (utils/auction.filters/js)
 const { buildConditions, buildListQuery } = require("../utils/auction.filters");
+const { closeExpiredAuctions } = require("../utils/auction.closer");
+
+// 공통 유틸: 경매 존재 여부 및 판매자 검증
+const findAuctionOr404 = async (id, res) => {
+  const [rows] = await db.query("SELECT * FROM auctions WHERE id = ?", [id]);
+  if (!rows || rows.length === 0) {
+    if (res) res.status(404).json({ message: "경매를 찾을 수 없습니다." });
+    return null;
+  }
+  return rows[0];
+};
 
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
@@ -68,6 +79,110 @@ exports.createAuction = async (req, res) => {
 };
 
 // ==========================================================
+// 🟦 경매 수정 API (PUT /api/auctions/:id)
+//  - 입찰이 하나라도 있는 경우 시작가/현재가는 수정 불가
+// ==========================================================
+exports.updateAuction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      sellerId,
+      title,
+      categoryId,
+      description,
+      imageUrl,
+      startPrice,
+      immediatePurchasePrice,
+      endTime,
+    } = req.body;
+
+    if (!sellerId) {
+      return res.status(400).json({ message: "판매자 정보가 필요합니다." });
+    }
+
+    const auction = await findAuctionOr404(id, res);
+    if (!auction) return;
+
+    // 판매자 검증
+    if (Number(auction.seller_id) !== Number(sellerId)) {
+      return res
+        .status(403)
+        .json({ message: "본인이 등록한 경매만 수정할 수 있습니다." });
+    }
+
+    // 종료된 경매 수정 방지
+    if (auction.status === "ended" || new Date(auction.end_time) <= new Date()) {
+      return res
+        .status(400)
+        .json({ message: "종료된 경매는 수정할 수 없습니다." });
+    }
+
+    // 현재까지 입찰 존재 여부 확인
+    const [bidRows] = await db.query(
+      "SELECT COUNT(*) AS cnt FROM bids WHERE auction_id = ?",
+      [id]
+    );
+    const bidCount = bidRows?.[0]?.cnt || 0;
+    const canEditPrice = bidCount === 0;
+
+    // 가격은 입찰이 없을 때만 수정
+    const nextStartPrice =
+      canEditPrice && startPrice != null
+        ? Number(startPrice)
+        : Number(auction.start_price);
+    const nextCurrentPrice =
+      canEditPrice && startPrice != null
+        ? Number(startPrice)
+        : Number(auction.current_price);
+
+    await db.query(
+      `UPDATE auctions
+       SET title = ?,
+           category_id = ?,
+           description = ?,
+           image_url = ?,
+           start_price = ?,
+           current_price = ?,
+           immediate_purchase_price = ?,
+           end_time = ?
+       WHERE id = ?`,
+      [
+        title ?? auction.title,
+        categoryId ?? auction.category_id,
+        description ?? auction.description,
+        imageUrl ?? auction.image_url,
+        nextStartPrice,
+        nextCurrentPrice,
+        immediatePurchasePrice ?? auction.immediate_purchase_price,
+        endTime ?? auction.end_time,
+        id,
+      ]
+    );
+
+    // 수정 결과 반환
+    const [updated] = await db.query(
+      `SELECT 
+        a.*,
+        u.nickname as seller_nickname,
+        c.name as category_name
+       FROM auctions a
+       LEFT JOIN users u ON a.seller_id = u.id
+       LEFT JOIN categories c ON a.category_id = c.id
+       WHERE a.id = ?`,
+      [id]
+    );
+
+    res.json({
+      message: "경매 수정 완료",
+      auction: updated?.[0] || null,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "경매 정보를 수정하지 못했습니다." });
+  }
+};
+
+// ==========================================================
 // 🟦 상품 상세 정보 조회 API (GET /api/auctions/:id)
 // ==========================================================
 exports.getAuctionById = async (req, res) => {
@@ -95,55 +210,21 @@ exports.getAuctionById = async (req, res) => {
 
     const auction = auctions[0]; // 첫 번째 상품 정보만 반환
 
-    // 경매 종료 시간 체크 및 자동 종료 처리
-    if (auction.status === "ongoing") {
-      const now = new Date();
-      const endTime = new Date(auction.end_time);
-      if (now >= endTime) {
-        // 최고 입찰가 조회
-        const [maxBids] = await db.query(
-          `SELECT bidder_id, amount 
-           FROM bids 
-           WHERE auction_id = ? 
-           ORDER BY amount DESC 
-           LIMIT 1`,
-          [id]
-        );
-
-        let winnerId = null;
-        let winningAmount = null;
-        if (maxBids.length > 0) {
-          winnerId = maxBids[0].bidder_id;
-          winningAmount = maxBids[0].amount;
-        }
-
-        // 경매 상태를 ended로 변경
-        await db.query(
-          `UPDATE auctions 
-           SET status = 'ended', 
-               winner_id = ?, 
-               winning_bid_amount = ?,
-               current_price = COALESCE(?, current_price)
-           WHERE id = ?`,
-          [winnerId, winningAmount, winningAmount, id]
-        );
-
-        // 업데이트된 경매 정보 다시 조회
-        const [updatedAuctions] = await db.query(
-          `SELECT 
-            a.*,
-            u.nickname as seller_nickname,
-            c.name as category_name
-          FROM auctions a
-          LEFT JOIN users u ON a.seller_id = u.id
-          LEFT JOIN categories c ON a.category_id = c.id
-          WHERE a.id = ?`,
-          [id]
-        );
-        if (updatedAuctions.length > 0) {
-          Object.assign(auction, updatedAuctions[0]);
-        }
-      }
+    // 경매 종료 시간 체크 및 자동 종료 처리 (공통 유틸)
+    await closeExpiredAuctions();
+    const [refetched] = await db.query(
+      `SELECT 
+        a.*,
+        u.nickname as seller_nickname,
+        c.name as category_name
+      FROM auctions a
+      LEFT JOIN users u ON a.seller_id = u.id
+      LEFT JOIN categories c ON a.category_id = c.id
+      WHERE a.id = ?`,
+      [id]
+    );
+    if (refetched.length > 0) {
+      Object.assign(auction, refetched[0]);
     }
 
     // 입찰 내역 조회
@@ -193,6 +274,8 @@ exports.getAuctionById = async (req, res) => {
 // ==========================================================
 exports.getAuctions = async (req, res) => {
   try {
+    await closeExpiredAuctions();
+
     const {
       status,
       category,
@@ -200,7 +283,7 @@ exports.getAuctions = async (req, res) => {
       maxPrice,
       page = 1,
       pageSize = 9,
-      userId,
+      sort = "latest",
     } = req.query;
 
     const pageNum = Number(page) || 1;
@@ -209,41 +292,28 @@ exports.getAuctions = async (req, res) => {
 
     const filter = buildConditions({ status, category, minPrice, maxPrice });
 
+    const sortMap = {
+      latest: "a.created_at DESC",
+      popular:
+        "(SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id) DESC, a.created_at DESC",
+      price: "a.current_price DESC, a.created_at DESC",
+      endingSoon: "a.end_time ASC, a.created_at DESC",
+    };
+    const orderBy = sortMap[sort] || sortMap.latest;
+
     const countSql =
       "SELECT COUNT(*) AS total FROM auctions a LEFT JOIN categories c ON a.category_id = c.id " +
       filter.whereClause;
     const [countRows] = await db.query(countSql, filter.values);
     const total = countRows?.[0]?.total || 0;
 
-    let params = [...filter.values];
-    let withLikes = false;
-    if (userId) {
-      withLikes = true;
-      params.unshift(Number(userId));
-    }
-
-    let items;
-    try {
-      const selectSql = buildListQuery({
-        withLikes,
-        whereClause: filter.whereClause,
-      });
-      items = await db
-        .query(selectSql, [...params, size, offset])
-        .then((r) => r[0]);
-    } catch (err) {
-      if (err.code === "ER_NO_SUCH_TABLE" && err.message.includes("likes")) {
-        const selectSql = buildListQuery({
-          withLikes: false,
-          whereClause: filter.whereClause,
-        });
-        items = await db
-          .query(selectSql, [...filter.values, size, offset])
-          .then((r) => r[0]);
-      } else {
-        throw err;
-      }
-    }
+    const selectSql = buildListQuery({
+      whereClause: filter.whereClause,
+      orderBy,
+    });
+    const items = await db
+      .query(selectSql, [...filter.values, size, offset])
+      .then((r) => r[0]);
 
     res.json({ total, page: pageNum, pageSize: size, items });
   } catch (error) {
