@@ -39,8 +39,10 @@ CREATE TABLE auctions (
     current_price DECIMAL(10,2) NOT NULL,
     immediate_purchase_price DECIMAL(10,2) NULL,
     status ENUM('ongoing','ended') DEFAULT 'ongoing',
-    start_time DATETIME NOT NULL,
+
+    start_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME NOT NULL,
+
     winner_id INT NULL,
     winning_bid_amount DECIMAL(10,2) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -64,103 +66,162 @@ CREATE TABLE bids (
     FOREIGN KEY (bidder_id) REFERENCES users(id)
 );
 
--- ------------------------------
--- 5) likes (찜)
--- ------------------------------
-CREATE TABLE likes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    auction_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (auction_id) REFERENCES auctions(id),
-
-    UNIQUE (user_id, auction_id)
-);
-
-
 -- ================================
 --  SEED: 기본 데이터 삽입
 -- ================================
 
--- users
+-- users 기본
 INSERT INTO users (email, password_hash, nickname) VALUES
-('test1@example.com', 'hashed_pw1', '테스터1'),
-('test2@example.com', 'hashed_pw2', '테스터2'),
-('alice@example.com', 'pw3', 'Alice'),
-('bob@example.com', 'pw4', 'Bob'),
-('charlie@example.com', 'pw5', 'Charlie');
+('test1@example.com', '$2b$10$abcdef1234567890abcdef1234567890abcdef1234567890abcdef', '테스터1'),
+('test2@example.com', '$2b$10$abcdef1234567890abcdef1234567890abcdef1234567890abcdef', '테스터2');
 
 -- categories
 INSERT INTO categories (name) VALUES
-('전자제품'),
-('패션'),
-('미술품'),
-('기타'),
-('수집품'),
-('주얼리'),
-('인테리어');
+('명품 / 패션'),
+('전자기기'),
+('미술품 / 컬렉션'),
+('취미 / 기타');
 
--- auctions (여러 시나리오 포함)
+-- auctions 기본 샘플
 INSERT INTO auctions (
     seller_id, category_id, title, description, image_url,
-    start_price, current_price, min_bid_increment,
+    start_price, current_price,
     immediate_purchase_price,
     status, start_time, end_time
 ) VALUES
--- 1 정상 진행 중 (전자제품)
-(1, 1, '중고 아이패드 판매', '깨끗하게 사용한 아이패드입니다.', 'https://example.com/ipad.jpg',
- 200000, 200000, 5000, 300000, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY)
+(1, 1,
+ '중고 아이패드 판매',
+ '깨끗하게 사용한 아이패드입니다.',
+ 'https://istore.xcache.kinxcdn.com/prd/data/goods/1/2024/11/342_temp_17307911200801large.jpg',
+ 200000, 200000, 300000,
+ 'ongoing', '2024-12-20 10:00:00', '2025-12-31 23:59:59'
 ),
-
--- 2 진행 중 (미술품)
-(2, 3, '유화 그림 판매', '직접 그린 유화 작품입니다.', 'https://example.com/art.jpg',
- 50000, 50000, 2000, NULL, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY)
-),
-
--- 3 즉시 구매가 있는 패션 상품
-(3, 2, '루이비통 스카프', '정품, 상태 최상', 'https://example.com/lv.jpg',
- 150000, 150000, 5000, 350000, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY)
-),
-
--- 4 이미 종료된 상품
-(4, 4, '엔틱 의자', '1940년대 고가구', 'https://example.com/chair.jpg',
- 120000, 180000, 3000, NULL, 'ended', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)
-),
-
--- 5 높은 입찰 경쟁 상품
-(5, 1, '맥북 프로 16인치', '2022 M1 Max', 'https://example.com/macbook.jpg',
- 1500000, 1650000, 10000, 2500000, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY)
-),
-
--- 6 카테고리 NULL (특수 케이스)
-(1, NULL, '카테고리 없는 상품', '테스트용', 'https://example.com/no-cat.jpg',
- 30000, 30000, 1000, NULL, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY)
-),
-
--- 7 인테리어 상품
-(2, 7, 'LED 무드등', '은은한 무드등', 'https://example.com/light.jpg',
- 20000, 25000, 500, NULL, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 4 DAY)
+(2, 3,
+ '유화 그림 판매',
+ '직접 그린 유화 작품입니다.',
+ 'https://d1x9f5mf11b8gz.cloudfront.net/class/20210820/6a95147d-e6b4-4fee-b642-a72eebb2b060.jpg',
+ 50000, 50000, NULL,
+ 'ongoing', '2024-12-20 10:00:00', '2024-12-25 18:00:00'
 );
 
--- bids (여러 시나리오)
+-- 기본 bids
 INSERT INTO bids (auction_id, bidder_id, amount) VALUES
--- 아이패드
 (1, 2, 205000),
-(1, 1, 210000),
+(2, 1, 52000);
 
--- 유화 그림
-(2, 1, 52000),
+-- ================================
+-- 추가 유저 10명
+-- ================================
+INSERT INTO users (email, password_hash, nickname) VALUES
+('user3@example.com', 'hash3', '유저3'),
+('user4@example.com', 'hash4', '유저4'),
+('user5@example.com', 'hash5', '유저5'),
+('user6@example.com', 'hash6', '유저6'),
+('user7@example.com', 'hash7', '유저7'),
+('user8@example.com', 'hash8', '유저8'),
+('user9@example.com', 'hash9', '유저9'),
+('user10@example.com', 'hash10', '유저10'),
+('user11@example.com', 'hash11', '유저11'),
+('user12@example.com', 'hash12', '유저12');
 
--- 맥북 경쟁 입찰
-(5, 3, 1550000),
-(5, 4, 1600000),
-(5, 5, 1650000);
+-- ================================
+-- 추가 AUCTIONS 테스트 케이스
+-- ================================
 
--- likes (찜 시나리오)
-INSERT INTO likes (user_id, auction_id) VALUES
-(1, 1),  -- test1 아이패드 찜
-(1, 3),  -- test1 LV 스카프 찜
-(2, 5),  -- test2 맥북 찜
-(3, 4);  -- Alice 엔틱 의자 찜
+-- A: 진행 + 즉구 O
+INSERT INTO auctions (
+    seller_id, category_id, title, description, image_url,
+    start_price, current_price, immediate_purchase_price,
+    status, start_time, end_time
+) VALUES
+(3, 2, '닌텐도 스위치 OLED', '거의 새것', 'https://media.bunjang.co.kr/product/250232252_1_1705764615_w%7Bres%7D.jpg',
+ 350000, 350000, 400000, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY)
+);
+
+-- B: 진행 + 즉구 X
+INSERT INTO auctions (
+    seller_id, category_id, title, description, image_url,
+    start_price, current_price, immediate_purchase_price,
+    status, start_time, end_time
+) VALUES
+(4, 1, '샤넬 카드지갑', '정품, 상태 최상', 'https://image-cdn.trenbe.com/productmain/1663755898282-5e40232f-2a75-4307-bb3f-698aba7e5454.jpeg',
+ 250000, 250000, NULL, 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY)
+);
+
+-- C: 종료됨
+INSERT INTO auctions (
+    seller_id, category_id, title, description, image_url,
+    start_price, current_price, immediate_purchase_price,
+    status, start_time, end_time, winner_id, winning_bid_amount
+) VALUES
+(5, 3, '수채화 작품', '감성 그림', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdG9uzJ2Y6M65QI9Hf5cUAza5B3rSeJnIQOQ&s',
+ 30000, 55000, NULL,
+ 'ended', '2024-01-01 12:00:00', '2024-01-02 12:00:00', 2, 55000
+);
+
+-- D: 10분 뒤 종료되는 경매
+INSERT INTO auctions (
+    seller_id, category_id, title, description, image_url,
+    start_price, current_price, immediate_purchase_price,
+    status, start_time, end_time
+) VALUES
+(6, 4, '레고 아키텍처', '박스 미개봉', 'https://www.lego.com/cdn/cs/set/assets/blt777738fc4faa11ad/21034_alt1.jpg',
+ 80000, 80000, 150000,
+ 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 10 MINUTE)
+);
+
+-- E: 고가 명품
+INSERT INTO auctions (
+    seller_id, category_id, title, description, image_url,
+    start_price, current_price, immediate_purchase_price,
+    status, start_time, end_time
+) VALUES
+(7, 1, '롤렉스 데이저스트', '정품 보증서 포함', 'https://th.bing.com/th/id/OIP.KCQ1Ivx79QOI9ac-DjpE1wHaHa?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3',
+ 9000000, 9000000, 11000000,
+ 'ongoing', NOW(), DATE_ADD(NOW(), INTERVAL 15 DAY)
+);
+
+-- ================================
+-- 추가 BIDS 테스트 케이스
+-- ================================
+
+-- 경매 1 (아이패드)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(1, 3, 215000),
+(1, 4, 220000),
+(1, 5, 250000),
+(1, 6, 260000);
+
+-- 경매 2 (유화)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(2, 3, 53000),
+(2, 4, 54000),
+(2, 5, 60000);
+
+-- 경매 3 (닌텐도)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(3, 8, 360000),
+(3, 9, 370000),
+(3, 10, 380000);
+
+-- 경매 4 (샤넬 카드지갑)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(4, 11, 255000),
+(4, 12, 260000);
+
+-- 경매 5 (종료된 수채화)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(5, 2, 50000),
+(5, 3, 55000);
+
+-- 경매 6 (레고)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(6, 4, 82000),
+(6, 5, 83000),
+(6, 6, 90000);
+
+-- 경매 7 (롤렉스)
+INSERT INTO bids(auction_id, bidder_id, amount) VALUES
+(7, 9, 9100000),
+(7, 10, 9200000),
+(7, 11, 9500000);

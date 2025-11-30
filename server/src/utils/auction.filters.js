@@ -6,8 +6,15 @@ const buildConditions = (filters = {}) => {
   const vals = [];
 
   if (status && status !== "all") {
-    conds.push("a.status = ?");
-    vals.push(status);
+    if (status === "ended") {
+      // treat anything past 종료시간 as 종료로 간주
+      conds.push("(a.status = 'ended' OR a.end_time <= NOW())");
+    } else if (status === "ongoing") {
+      conds.push("(a.status = 'ongoing' AND a.end_time > NOW())");
+    } else {
+      conds.push("a.status = ?");
+      vals.push(status);
+    }
   }
   if (category) {
     conds.push("c.name = ?");
@@ -26,23 +33,21 @@ const buildConditions = (filters = {}) => {
   return { whereClause, values: vals };
 };
 
-const buildListQuery = ({ withLikes, whereClause }) => {
-  const likedSelect = withLikes
-    ? ", IF(EXISTS(SELECT 1 FROM likes l WHERE l.auction_id = a.id AND l.user_id = ?), 1, 0) AS liked "
-    : ", 0 AS liked ";
-
+const buildListQuery = ({ whereClause, orderBy }) => {
+  const order = orderBy || "a.created_at DESC";
   return (
     "SELECT " +
     "a.id, a.title, a.description, a.image_url, " +
-    "a.start_price, a.current_price, a.status, a.start_time, a.end_time, a.created_at, " +
+    "a.start_price, a.current_price, " +
+    "CASE WHEN a.end_time <= NOW() THEN 'ended' ELSE a.status END AS status, " +
+    "a.start_time, a.end_time, a.created_at, " +
     "u.nickname AS seller_nickname, c.name AS category_name, " +
     "(SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id) AS bid_count " +
-    likedSelect +
     "FROM auctions a " +
     "LEFT JOIN users u ON a.seller_id = u.id " +
     "LEFT JOIN categories c ON a.category_id = c.id " +
     whereClause +
-    " ORDER BY a.created_at DESC LIMIT ? OFFSET ?"
+    ` ORDER BY ${order} LIMIT ? OFFSET ?`
   );
 };
 

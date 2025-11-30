@@ -161,19 +161,21 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  padding: 4px 10px;
-  border-radius: 30px;
-  color: #fff;
+  padding: 3px 8px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
+  border: 1px solid currentColor;
 }
 
 .statusOngoing {
-  background: #24c18f;
+  background: rgba(36, 168, 98, 0.12);
+  color: #24a862;
 }
 
 .statusEnded {
-  background: #9ca9c8;
+  background: rgba(124, 132, 153, 0.12);
+  color: #7c8499;
 }
 
 .cardBody {

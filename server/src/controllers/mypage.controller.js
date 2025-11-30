@@ -1,4 +1,6 @@
 const db = require("../config/db");
+// 마이페이지 조회 전 종료된 경매를 최신 상태로 반영
+const { closeExpiredAuctions } = require("../utils/auction.closer");
 
 const defaultProfile = {
   name: "",
@@ -9,6 +11,9 @@ exports.getDashboard = async (req, res) => {
   const userId = Number(req.params.userId || 1);
 
   try {
+    // 종료된 경매 상태 먼저 정리 후 내 데이터 계산
+    await closeExpiredAuctions();
+
     const [users] = await db.query(
       "SELECT id, email, nickname FROM users WHERE id = ?",
       [userId]
@@ -43,39 +48,43 @@ exports.getDashboard = async (req, res) => {
       [userId]
     );
 
-    const [favorites] = await db.query(
-      "SELECT a.id, a.title, c.name AS category, a.current_price AS currentPrice, a.status, a.end_time AS endTime, a.image_url, " +
-        "IFNULL((SELECT MAX(b.amount) FROM bids b WHERE b.auction_id = a.id AND b.bidder_id = ?), 0) AS myBid, " +
-        "IFNULL((SELECT COUNT(*) FROM bids b2 WHERE b2.auction_id = a.id), 0) AS bidCount " +
-        "FROM likes l " +
-        "JOIN auctions a ON l.auction_id = a.id " +
-        "LEFT JOIN categories c ON a.category_id = c.id " +
-        "WHERE l.user_id = ? " +
-        "ORDER BY a.end_time DESC",
-      [userId, userId]
-    );
+    const computeStatus = (endTime) =>
+      new Date(endTime).getTime() <= Date.now() ? "ended" : "ongoing";
+
+    const myAuctionsWithStatus = myAuctions.map((auction) => ({
+      ...auction,
+      status: computeStatus(auction.endTime),
+    }));
+
+    const bidHistoryWithStatus = bidHistory.map((bid) => ({
+      ...bid,
+      status: computeStatus(bid.endTime),
+    }));
 
     const [winRows] = await db.query(
-      "SELECT COUNT(*) AS wins FROM auctions WHERE winner_id = ?",
+      "SELECT COUNT(*) AS wins FROM auctions WHERE winner_id = ? AND end_time <= NOW()",
       [userId]
     );
 
-    const [bidSumRows] = await db.query(
-      "SELECT IFNULL(SUM(amount), 0) AS totalAmount FROM bids WHERE bidder_id = ?",
-      [userId]
+    const [tradeSumRows] = await db.query(
+      "SELECT IFNULL(SUM(winning_bid_amount), 0) AS totalAmount " +
+        "FROM auctions " +
+        "WHERE winning_bid_amount IS NOT NULL " +
+        "AND end_time <= NOW() " +
+        "AND (seller_id = ? OR winner_id = ?)",
+      [userId, userId]
     );
 
     res.json({
       profile,
       stats: {
-        listed: myAuctions.length,
-        bidding: bidHistory.length,
+        listed: myAuctionsWithStatus.length,
+        bidding: bidHistoryWithStatus.filter((item) => item.status === "ongoing").length,
         wins: winRows?.[0]?.wins || 0,
-        totalAmount: bidSumRows?.[0]?.totalAmount || 0,
+        totalAmount: tradeSumRows?.[0]?.totalAmount || 0,
       },
-      myAuctions,
-      bidHistory,
-      favorites,
+      myAuctions: myAuctionsWithStatus,
+      bidHistory: bidHistoryWithStatus,
     });
   } catch (error) {
     console.error(error);

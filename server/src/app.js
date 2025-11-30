@@ -4,6 +4,7 @@ const cors = require("cors");
 const db = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const auctionRoutes = require("./routes/auction.routes");
+const mypageRoutes = require("./routes/mypage.routes");
 
 const app = express();
 
@@ -31,5 +32,8 @@ app.use("/api/auth", authRoutes);
 
 // 상품 상세 api 라우트
 app.use("/api/auctions", auctionRoutes);
+
+// 마이페이지 대시보드
+app.use("/api/mypage", mypageRoutes);
 
 module.exports = app;

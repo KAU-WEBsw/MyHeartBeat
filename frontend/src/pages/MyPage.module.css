@@ -309,10 +309,11 @@
 }
 
 .badge {
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   font-weight: 700;
   font-size: 12px;
+  line-height: 1.1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -321,12 +322,12 @@
 }
 
 .badgeGreen {
-  background: rgba(36, 168, 98, 0.08);
+  background: rgba(36, 168, 98, 0.12);
   color: #24a862;
 }
 
 .badgeGray {
-  background: rgba(124, 132, 153, 0.08);
+  background: rgba(124, 132, 153, 0.12);
   color: #7c8499;
 }
 
@@ -361,6 +362,26 @@
 
 .tableRow {
   border-top: 1px solid #eef1f6;
+}
+
+.tableRow span,
+.tableRow p {
+  font-size: 16px;
+}
+
+.tableRow .badge {
+  justify-self: start;
+  align-self: center;
+  width: auto;
+  font-size: 12px;
+  padding: 3px 8px;
+  line-height: 1.1;
+}
+
+.tableRow .pricePrimary,
+.tableRow .countStrong,
+.tableRow .timeDanger {
+  font-size: 16px;
 }
 
 .productCell {
