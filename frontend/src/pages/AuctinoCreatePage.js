@@ -24,7 +24,7 @@ function AuctionCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
-  const isEditMode = useMemo(() => Boolean(editId), [editId]);
+  const isEditMode = useMemo(() => Boolean(editId), [editId]); // 쿼리로 들어온 id가 있으면 수정 모드
 
   const [form, setForm] = useState({
     title: "",

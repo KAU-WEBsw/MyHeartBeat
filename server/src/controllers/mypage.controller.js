@@ -1,4 +1,5 @@
 const db = require("../config/db");
+// 마이페이지 조회 전 종료된 경매를 최신 상태로 반영
 const { closeExpiredAuctions } = require("../utils/auction.closer");
 
 const defaultProfile = {
@@ -10,7 +11,7 @@ exports.getDashboard = async (req, res) => {
   const userId = Number(req.params.userId || 1);
 
   try {
-    // 종료된 경매 상태 먼저 정리
+    // 종료된 경매 상태 먼저 정리 후 내 데이터 계산
     await closeExpiredAuctions();
 
     const [users] = await db.query(

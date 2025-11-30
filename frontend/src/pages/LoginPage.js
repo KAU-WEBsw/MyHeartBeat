@@ -32,7 +32,7 @@ function LoginPage() {
         return;
       }
 
-      // 로그인 정보 저장 (간단히 로컬스토리지 사용)
+      // 로그인 정보 저장 (간단히 로컬스토리지 사용 → 이후 마이페이지 등에서 활용)
       if (data?.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }

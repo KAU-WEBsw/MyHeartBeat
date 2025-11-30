@@ -120,7 +120,7 @@ function MyPage() {
   };
 
   useEffect(() => {
-    // 로그인 정보 로드
+    // 로그인 정보 로드 (로컬스토리지 → 마이페이지 조회 대상 설정)
     const stored = localStorage.getItem("user");
     if (stored) {
       try {
@@ -133,7 +133,7 @@ function MyPage() {
   }, []);
 
   useEffect(() => {
-    if (!targetUserId) return;
+    if (!targetUserId) return; // 사용자 ID가 준비된 이후에만 호출
     const fetchDashboard = async () => {
       try {
         const res = await fetch(`/api/mypage/${targetUserId}`);

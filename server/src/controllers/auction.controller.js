@@ -2,6 +2,7 @@
 const db = require("../config/db");
 // 물품 목록 - 필터 (utils/auction.filters/js)
 const { buildConditions, buildListQuery } = require("../utils/auction.filters");
+// 만료된 경매를 일괄 종료하고 낙찰 정보까지 반영하는 유틸
 const { closeExpiredAuctions } = require("../utils/auction.closer");
 
 // 공통 유틸: 경매 존재 여부 및 판매자 검증
@@ -100,7 +101,7 @@ exports.updateAuction = async (req, res) => {
       return res.status(400).json({ message: "판매자 정보가 필요합니다." });
     }
 
-    const auction = await findAuctionOr404(id, res);
+    const auction = await findAuctionOr404(id, res); // 수정 대상 조회
     if (!auction) return;
 
     // 판매자 검증
@@ -211,7 +212,7 @@ exports.getAuctionById = async (req, res) => {
     const auction = auctions[0]; // 첫 번째 상품 정보만 반환
 
     // 경매 종료 시간 체크 및 자동 종료 처리 (공통 유틸)
-    await closeExpiredAuctions();
+    await closeExpiredAuctions(); // 상세 조회 직전에 만료분을 종료/낙찰 처리
     const [refetched] = await db.query(
       `SELECT 
         a.*,
@@ -274,7 +275,7 @@ exports.getAuctionById = async (req, res) => {
 // ==========================================================
 exports.getAuctions = async (req, res) => {
   try {
-    await closeExpiredAuctions();
+    await closeExpiredAuctions(); // 목록 조회 전에 만료분 정리 후 최신 상태 반환
 
     const {
       status,
