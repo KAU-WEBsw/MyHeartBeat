@@ -83,37 +83,38 @@ MySQL Workbench에서 실행:
 
 ```bash
 MyHeartBeat/
-├─ server/                # 백엔드 (Node.js + Express + MySQL)
-│  ├─ src/
-│  │  ├─ app.js           # 서버 설정 & 미들웨어 등록
-│  │  ├─ server.js        # 서버 실행 엔트리 포인트
-│  │  ├─ config/          # DB 연결 설정
-│  │  ├─ controllers/     # 요청 처리 로직
-│  │  ├─ middleware/      # 인증 / 보안 관련 미들웨어
-│  │  ├─ models/          # DB 모델 정의
-│  │  └─ routes/          # API 엔드포인트 관리
-│  ├─ .env                # 환경 변수 (DB 접근 정보 등)
-│  ├─ package.json        # 서버 의존성 관리
-│  └─ README.md           # (선택) 서버 설명 문서
+├── frontend/               # React 기반 사용자 화면
+│   ├── public/
+│   │   └── assets/         # 이미지 / 아이콘
+│   └── src/
+│       ├── components/     # 공통 컴포넌트 (Header 등)
+│       └── pages/          # 주요 화면 페이지
+│           ├── LandingPage.js
+│           ├── LoginPage.js
+│           ├── SignupPage.js
+│           ├── MainPage.js
+│           ├── AuctionListPage.js
+│           ├── AuctionCreatePage.js
+│           ├── ProductDetailPage.js
+│           └── MyPage.js
 │
-└─ frontend/              # 프론트엔드 (React)
-   ├─ public/             # 정적 리소스
-   ├─ src/
-   │  ├─ App.js           # 전체 앱 구조 / 라우팅
-   │  ├─ App.css          # 전역 스타일링
-   │  ├─ index.js         # React 렌더링 시작점
-   │  ├─ index.css        # 기본 스타일
-   │  ├─ components/      # 재사용 컴포넌트
-   │  │  ├─ Header.js
-   │  │  └─ Header.css
-   │  └─ pages/
-   │     ├─ LandingPage.js      # 랜딩 페이지
-   │     ├─ LoginPage.js        # 로그인 페이지
-   │     ├─ SignupPage.js        # 회원가입 페이지
-   │     ├─ MainPage.js         # 메인 페이지 (경매 홈)
-   │     ├─ ProductDetailPage.js # 상품 상세 페이지
-   │     └─ AuctionCreatePage.js # 경매 등록 페이지
-   └─ package.json              # 프론트 의존성 관리
+└── server/                 # Node.js + Express 백엔드
+    ├── database/
+    │   └── schema.sql      # 테이블 구조
+    ├── config/
+    │   └── db.js           # DB 연결 설정
+    ├── controllers/        # 기능 로직
+    │   ├── auth.controller.js
+    │   ├── auction.controller.js
+    │   ├── like.controller.js
+    │   └── mypage.controller.js
+    ├── routes/             # API 라우팅
+    │   ├── auth.routes.js
+    │   ├── auction.routes.js
+    │   ├── like.routes.js
+    │   └── mypage.routes.js
+    └── app.js              
+
 ```
 
 
