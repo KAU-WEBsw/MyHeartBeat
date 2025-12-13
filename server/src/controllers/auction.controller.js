@@ -21,33 +21,63 @@ const findAuctionOr404 = async (id, res) => {
 // ==========================================================
 exports.createAuction = async (req, res) => {
   try {
-    const {
-      title,
-      categoryId,
-      description,
-      imageUrl,
-      startPrice,
-      immediatePurchasePrice,
-      endTime,
-      sellerId,
-    } = req.body;
+    // 프론트에서 보내는 여러 필드명(camelCase / snake_case) 대비
+    const raw = req.body || {};
 
-    // ✅ 필수값 체크 (startTime은 더 이상 필요 없음)
+    // 디버깅 로그: 들어오는 폼/파일/세션 정보를 빠르게 확인하기 위함
+    console.log('--- createAuction body ---', raw);
+    console.log('--- createAuction file ---', req.file);
+    console.log('--- createAuction headers cookie ---', req.headers?.cookie);
+    console.log('--- createAuction session user ---', req.session?.user);
+    const title = raw.title ?? raw.name;
+    const categoryId = raw.categoryId ?? raw.category ?? raw.category_id;
+    const description = raw.description ?? raw.desc;
+    const imageUrl = raw.imageUrl ?? raw.image_url;
+    const startPrice = raw.startPrice ?? raw.start_price;
+    const immediatePurchasePrice =
+      raw.immediatePurchasePrice ?? raw.immediate_purchase_price;
+    const endTime = raw.endTime ?? raw.end_time;
+    const sellerIdFromBody = raw.sellerId ?? raw.seller_id ?? raw.seller;
+
+    // 업로드 파일이 있으면 우선 사용
+    const finalImageUrl = req.file
+      ? `/uploads/${req.file.filename}`
+      : imageUrl || null;
+
+    // 세션에서 판매자 아이디 우선, 없으면 바디에서(여러 위치 허용)
+    const sessionSellerId =
+      req.session?.user?.id ?? req.session?.userId ?? req.session?.user?.userId ?? null;
+    const parsedSellerId =
+      sessionSellerId != null
+        ? Number(sessionSellerId)
+        : sellerIdFromBody != null && sellerIdFromBody !== ""
+        ? Number(sellerIdFromBody)
+        : null;
+
+    // 숫자 필드 안전 변환
+    const parsedCategoryId =
+      categoryId != null && categoryId !== "" ? Number(categoryId) : null;
+    const parsedStartPrice =
+      startPrice != null && startPrice !== "" ? Number(startPrice) : null;
+    const parsedImmediate =
+      immediatePurchasePrice != null && immediatePurchasePrice !== ""
+        ? Number(immediatePurchasePrice)
+        : null;
+
+    // 필수값 체크: parsedSellerId 는 null/undefined 검사
     if (
-      !sellerId ||
+      parsedSellerId == null ||
       !title ||
-      categoryId == null ||
-      startPrice == null ||
+      parsedCategoryId == null ||
+      parsedStartPrice == null ||
       !endTime
     ) {
       return res.status(400).json({ message: "필수 값이 누락되었습니다." });
     }
 
-    const status = "ongoing"; // 기본 상태 = 진행중
-    const currentPrice = startPrice; // 현재가 = 시작가로 초기화
+    const status = "ongoing";
+    const currentPrice = parsedStartPrice;
 
-    // DB INSERT 실행
-    // ⬇️ start_time 컬럼은 빼고, DB의 DEFAULT CURRENT_TIMESTAMP 사용
     const [result] = await db.query(
       `INSERT INTO auctions
         (seller_id, category_id, title, description, image_url,
@@ -55,20 +85,19 @@ exports.createAuction = async (req, res) => {
          immediate_purchase_price, status, end_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        sellerId,
-        categoryId || null,
+        parsedSellerId,
+        parsedCategoryId || null,
         title,
         description || null,
-        imageUrl || null,
-        startPrice,
+        finalImageUrl,
+        parsedStartPrice,
         currentPrice,
-        immediatePurchasePrice || null,
+        parsedImmediate || null,
         status,
         endTime,
       ]
     );
 
-    // 성공 응답
     res.status(201).json({
       message: "경매 등록 성공",
       auctionId: result.insertId,
@@ -97,7 +126,28 @@ exports.updateAuction = async (req, res) => {
       endTime,
     } = req.body;
 
-    if (!sellerId) {
+    // ✅ 수정: sellerId는 세션에서 우선 가져오고, 없으면 body fallback
+    const sessionSellerId =
+      req.session?.user?.id ?? req.session?.userId ?? req.session?.user?.userId; // ✅ 수정
+    const parsedSellerId =
+      sessionSellerId != null
+        ? Number(sessionSellerId) // ✅ 수정
+        : sellerId != null && sellerId !== ""
+        ? Number(sellerId)
+        : null; // ✅ 수정
+
+    // ✅ 수정: multipart/form-data로 오면 문자열일 수 있으니 안전 변환
+    const parsedCategoryId =
+      categoryId != null && categoryId !== "" ? Number(categoryId) : null; // ✅ 수정
+    const parsedStartPrice =
+      startPrice != null && startPrice !== "" ? Number(startPrice) : null; // ✅ 수정
+    const parsedImmediate =
+      immediatePurchasePrice != null && immediatePurchasePrice !== ""
+        ? Number(immediatePurchasePrice)
+        : null; // ✅ 수정
+
+    if (!parsedSellerId) {
+      // ✅ 수정
       return res.status(400).json({ message: "판매자 정보가 필요합니다." });
     }
 
@@ -105,14 +155,18 @@ exports.updateAuction = async (req, res) => {
     if (!auction) return;
 
     // 판매자 검증
-    if (Number(auction.seller_id) !== Number(sellerId)) {
+    if (Number(auction.seller_id) !== Number(parsedSellerId)) {
+      // ✅ 수정
       return res
         .status(403)
         .json({ message: "본인이 등록한 경매만 수정할 수 있습니다." });
     }
 
     // 종료된 경매 수정 방지
-    if (auction.status === "ended" || new Date(auction.end_time) <= new Date()) {
+    if (
+      auction.status === "ended" ||
+      new Date(auction.end_time) <= new Date()
+    ) {
       return res
         .status(400)
         .json({ message: "종료된 경매는 수정할 수 없습니다." });
@@ -128,13 +182,18 @@ exports.updateAuction = async (req, res) => {
 
     // 가격은 입찰이 없을 때만 수정
     const nextStartPrice =
-      canEditPrice && startPrice != null
-        ? Number(startPrice)
+      canEditPrice && parsedStartPrice != null // ✅ 수정
+        ? Number(parsedStartPrice) // ✅ 수정
         : Number(auction.start_price);
     const nextCurrentPrice =
-      canEditPrice && startPrice != null
-        ? Number(startPrice)
+      canEditPrice && parsedStartPrice != null // ✅ 수정
+        ? Number(parsedStartPrice) // ✅ 수정
         : Number(auction.current_price);
+
+    // ✅ 수정: 업로드 파일이 있으면 그걸 우선 사용 (없으면 기존 imageUrl / 기존 DB값 유지)
+    const finalImageUrl = req.file
+      ? `/uploads/${req.file.filename}` // ✅ 수정
+      : imageUrl ?? auction.image_url; // ✅ 수정
 
     await db.query(
       `UPDATE auctions
@@ -149,12 +208,12 @@ exports.updateAuction = async (req, res) => {
        WHERE id = ?`,
       [
         title ?? auction.title,
-        categoryId ?? auction.category_id,
+        parsedCategoryId ?? auction.category_id, // ✅ 수정
         description ?? auction.description,
-        imageUrl ?? auction.image_url,
+        finalImageUrl, // ✅ 수정
         nextStartPrice,
         nextCurrentPrice,
-        immediatePurchasePrice ?? auction.immediate_purchase_price,
+        parsedImmediate ?? auction.immediate_purchase_price, // ✅ 수정
         endTime ?? auction.end_time,
         id,
       ]
