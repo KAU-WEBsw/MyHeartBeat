@@ -5,9 +5,10 @@ import styles from "./MyPage.module.css";
 //import placeholder from "../assets/placeholder.svg";
 const placeholder = "/assets/placeholder.svg";
 
-
+// 금융값 표기 유틸: 경매 상세와 동일하게 ₩ + 콤마 포맷 유지
 const formatCurrency = (value = 0) => `₩${Number(value).toLocaleString("ko-KR")}`;
 
+// 경매 종료까지 남은 시간을 텍스트로 변환
 const timeLeft = (end) => {
   const endDate = new Date(end);
   const diff = endDate.getTime() - Date.now();
@@ -17,6 +18,7 @@ const timeLeft = (end) => {
   return `${days}일 ${hours}시간`;
 };
 
+// icons: SVG 를 직접 정의해 외부 라이브러리 없이도 일관된 아이콘 사용
 const icons = {
   calendar: (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
@@ -76,6 +78,7 @@ const icons = {
   ),
 };
 
+// emptyDashboard: 초기 렌더링에서도 안전하게 접근할 수 있도록 기본 값 정의
 const emptyDashboard = {
   profile: {
     name: "",
@@ -97,6 +100,10 @@ function Badge({ status }) {
 }
 
 function MyPage() {
+  // data: 서버에서 가져온 전체 대시보드 데이터
+  // tab: 'all' | 'ongoing' | 'ended' 탭 상태
+  // activeNav: 좌측 사이드 메뉴에서 현재 강조할 항목
+  // userIdState: 로그인 사용자 정보 (URL 파라미터 없이도 접근 가능)
   const [data, setData] = useState(emptyDashboard);
   const [tab, setTab] = useState("all");
   const [activeNav, setActiveNav] = useState("auctions");
@@ -106,14 +113,16 @@ function MyPage() {
   const navigate = useNavigate();
   const { userId } = useParams();
   const targetUserId = userId || userIdState;
+  // computeStatus: 경매 종료 여부를 계산하여 UI 전반에서 재사용
   const computeStatus = (endTime) => {
     const endDate = new Date(endTime);
     if (Number.isNaN(endDate.getTime())) return "ongoing";
     return endDate.getTime() <= Date.now() ? "ended" : "ongoing";
   };
 
+  // scrollTo: 좌측 네비 클릭 시 해당 섹션으로 부드럽게 스크롤
   const scrollTo = (ref, key) => {
-    setActiveNav(key || activeNav);
+    if (key) setActiveNav(key);
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -156,17 +165,20 @@ function MyPage() {
     [data.bidHistory]
   );
 
+  // filteredMyAuctions: 탭 상태에 따라 보여줄 카드 리스트
   const filteredMyAuctions = useMemo(() => {
     if (tab === "all") return myAuctionsWithStatus;
     if (tab === "ongoing") return myAuctionsWithStatus.filter((a) => a.status === "ongoing");
     return myAuctionsWithStatus.filter((a) => a.status === "ended");
   }, [myAuctionsWithStatus, tab]);
 
+  // 좌측 네비게이션 항목 정의
   const navItems = [
     { key: "auctions", label: "내가 올린 경매", icon: icons.hammer, ref: auctionsRef },
     { key: "bids", label: "입찰 내역", icon: icons.calendar, ref: bidsRef },
   ];
 
+  // 통계 카드 구성: 클릭 시 해당 섹션으로 이동
   const statCards = [
     { key: "listed", label: "등록 물건", value: data.stats.listed, icon: icons.calendar, onClick: () => scrollTo(auctionsRef, "auctions") },
     { key: "bidding", label: "진행중 입찰", value: data.stats.bidding, icon: icons.hammer, onClick: () => scrollTo(bidsRef, "bids") },
@@ -179,6 +191,7 @@ function MyPage() {
       <Header />
       <main className={styles.container}>
         <aside className={styles.sideNav}>
+          {/* 프로필 카드: 서버 데이터가 없을 때도 initials 로 표시 */}
           <div className={styles.profileCard}>
             <div className={styles.avatarFallback}>{(data.profile?.name || "").slice(0, 1) || "N"}</div>
             <h3>{data.profile?.name || ""}</h3>
@@ -202,6 +215,7 @@ function MyPage() {
         </aside>
 
         <section className={styles.mainArea}>
+          {/* 상단 통계 카드 그룹 */}
           <div className={styles.statsSticky}>
             <div className={styles.statsRow}>
               {statCards.map((card) => (
@@ -214,6 +228,7 @@ function MyPage() {
             </div>
           </div>
 
+          {/* 내가 올린 물건 섹션 */}
           <div ref={auctionsRef} className={styles.sectionHeader}>
             <div>
               <h2>내가 올린 물건</h2>
@@ -225,6 +240,7 @@ function MyPage() {
             </button>
           </div>
 
+          {/* 탭: 전체 / 진행중 / 종료 를 버튼 3개로 구현 */}
           <div className={styles.tabs}>
             <button
               className={`${styles.tabBtn} ${tab === "all" ? styles.tabActive : ""}`}
@@ -246,9 +262,13 @@ function MyPage() {
             </button>
           </div>
 
+          {/* 내가 올린 경매 카드 목록: 각 카드에는 상태 뱃지 + action 버튼 존재 */}
           <div className={styles.cardList}>
-            {filteredMyAuctions.map((item) => (
-              <article key={item.id} className={styles.itemCard}>
+            {filteredMyAuctions.map((item) => {
+              // 카드 내부에서는 남은 시간을 한 번만 계산해 여러 곳에서 재사용
+              const remainingTime = timeLeft(item.endTime);
+              return (
+                <article key={item.id} className={styles.itemCard}>
                 <img src={item.image_url || placeholder} alt={item.title} />
                 <div className={styles.itemInfo}>
                   <h3>{item.title}</h3>
@@ -267,8 +287,8 @@ function MyPage() {
                     </div>
                     <div>
                       <p className={styles.label}>남은 시간</p>
-                      <p className={timeLeft(item.endTime) === "종료" ? styles.danger : styles.time}>
-                        {timeLeft(item.endTime)}
+                      <p className={remainingTime === "종료" ? styles.danger : styles.time}>
+                        {remainingTime}
                       </p>
                     </div>
                   </div>
@@ -292,13 +312,15 @@ function MyPage() {
                 >
                   {item.status === "ended" ? "종료" : "진행 중"}
                 </span>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
 
           <div ref={bidsRef} className={styles.sectionHeader}>
             <h2>입찰 내역</h2>
           </div>
+          {/* 입찰 내역은 테이블 레이아웃으로 구현 → 행 클릭 시 상세로 이동 */}
           <div className={styles.table}>
             <div className={styles.tableHead}>
               <span>물건</span>
@@ -309,7 +331,20 @@ function MyPage() {
               <span>상태</span>
             </div>
             {bidHistoryWithStatus.map((item) => (
-              <div key={item.id} className={styles.tableRow}>
+              <div
+                key={item.id}
+                className={styles.tableRow}
+                style={{ cursor: "pointer" }}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/product/${item.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/product/${item.id}`);
+                  }
+                }}
+              >
                 <div className={styles.productCell}>
                   <img src={item.image_url || placeholder} alt={item.title} />
                   <div>

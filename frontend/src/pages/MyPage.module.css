@@ -1,8 +1,10 @@
-﻿.page {
+﻿/* 전체 마이페이지 레이아웃 기본 배경 */
+.page {
   background: #f5f7fb;
   min-height: 100vh;
 }
 
+/* 좌측 사이드바 + 우측 본문 2열 레이아웃 */
 .container {
   max-width: 1280px;
   margin: 0 auto;
@@ -12,6 +14,7 @@
   padding: 24px 20px 20px;
 }
 
+/* 사이드 네비게이션 카드: sticky 로 스크롤 중에도 고정 */
 .sideNav {
   position: sticky;
   top: 90px;
@@ -25,6 +28,7 @@
   box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
 }
 
+/* 프로필 카드 기본 정렬 */
 .profileCard {
   text-align: center;
   display: grid;
@@ -39,6 +43,7 @@
   margin: 0 auto;
 }
 
+/* 아바타 이미지를 업로드하지 않았을 때 보여줄 이니셜 원형 */
 .avatarFallback {
   width: 96px;
   height: 96px;
@@ -64,6 +69,7 @@
   font-size: 14px;
 }
 
+/* "대시보드" 타이틀 스타일 */
 .menuTitle {
   font-weight: 800;
   color: #1f2a44;
@@ -77,6 +83,7 @@
   gap: 10px;
 }
 
+/* 사이드 메뉴 항목: hover/active 시 배경색을 바꿔 현재 위치 표시 */
 .menuItem {
   padding: 12px 12px;
   border-radius: 12px;
@@ -103,6 +110,7 @@
   color: inherit;
 }
 
+/* 본문 카드: 흰색 배경 위에 그림자를 줘 카드 느낌 강조 */
 .mainArea {
   background: #fff;
   border: 1px solid #e6eaf3;
@@ -119,12 +127,14 @@
   padding-bottom: 0;
 }
 
+/* 통계 카드 4개를 responsive grid 로 배치 */
 .statsRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
 }
 
+/* 통계 카드 자체 스타일 (버튼으로도 작동) */
 .statCard {
   background: #fff;
   border: 1px solid #e6eaf3;
@@ -159,6 +169,7 @@
   font-size: 14px;
 }
 
+/* "내가 올린 물건" 등 섹션 헤더 정렬 */
 .sectionHeader {
   display: flex;
   justify-content: space-between;
@@ -176,6 +187,7 @@
   font-size: 14px;
 }
 
+/* 새 물건 등록 CTA 버튼 */
 .primaryButton {
   background: #2f5dff;
   color: #fff;
@@ -194,11 +206,13 @@
   color: inherit;
 }
 
+/* 탭 버튼 컨테이너 */
 .tabs {
   display: flex;
   gap: 8px;
 }
 
+/* 각 탭 버튼: 기본은 outline 스타일, 활성화 시 배경색 채움 */
 .tabBtn {
   border: 1px solid #d8deec;
   background: #fff;
@@ -208,18 +222,20 @@
   cursor: pointer;
   font-weight: 700;
 }
-
+/* 선택된 탭을 더 뚜렷하게 보이도록 채워진 스타일 */
 .tabActive {
   background: #2f5dff !important;
   color: #fff !important;
   border-color: #2f5dff !important;
 }
 
+/* 경매 카드 리스트를 반응형 grid 로 배치 */
 .cardList {
   display: grid;
   gap: 12px;
 }
 
+/* 개별 경매 카드 - 이미지/정보/뱃지 포함 */
 .itemCard {
   position: relative;
   display: grid;
@@ -245,6 +261,7 @@
   right: 12px;
 }
 
+/* 텍스트 정보 영역 */
 .itemInfo {
   display: grid;
   gap: 8px;
@@ -263,6 +280,7 @@
   margin: 0;
 }
 
+/* 가격/입찰수/남은시간을 3열로 나열 */
 .itemStats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -292,11 +310,13 @@
   align-items: center;
 }
 
+/* 카드 내 액션 버튼 그룹 */
 .buttons {
   display: flex;
   gap: 8px;
 }
 
+/* ghost 버튼: 배경 없이 테두리만 있는 버튼 */
 .ghost {
   background: #fff;
   border: 1px solid #d8deec;
@@ -308,6 +328,7 @@
   gap: 6px;
 }
 
+/* 상태 뱃지는 재사용되므로 공통 스타일 분리 */
 .badge {
   padding: 3px 8px;
   border-radius: 999px;
@@ -321,16 +342,19 @@
   min-width: 0;
 }
 
+/* 진행중 상태 뱃지 색상: 긍정적 느낌의 초록 */
 .badgeGreen {
   background: rgba(36, 168, 98, 0.12);
   color: #24a862;
 }
 
+/* 종료 상태 뱃지 색상: 중립적인 회색 */
 .badgeGray {
   background: rgba(124, 132, 153, 0.12);
   color: #7c8499;
 }
 
+/* 입찰 내역 테이블: 헤더와 행을 grid 로 표현 */
 .table {
   border: 1px solid #e6eaf3;
   border-radius: 12px;
@@ -340,6 +364,7 @@
   display: grid;
 }
 
+/* 헤더와 각 행은 동일한 column 템플릿을 공유 */
 .tableHead,
 .tableRow {
   display: grid;
@@ -355,11 +380,13 @@
   color: #4d5875;
 }
 
+/* 헤더 텍스트 조금 더 강조 */
 .tableHead span {
   font-weight: 700;
   font-size: 16px;
 }
 
+/* 행 사이 구분선을 넣어 가독성 확보 */
 .tableRow {
   border-top: 1px solid #eef1f6;
 }
@@ -369,6 +396,7 @@
   font-size: 16px;
 }
 
+/* 테이블 내 뱃지는 좌측 정렬 */
 .tableRow .badge {
   justify-self: start;
   align-self: center;
@@ -384,6 +412,7 @@
   font-size: 16px;
 }
 
+/* 테이블 첫 번째 칸: 이미지 + 텍스트를 수평 정렬 */
 .productCell {
   display: flex;
   gap: 8px;
@@ -397,17 +426,20 @@
   border-radius: 10px;
 }
 
+/* 테이블 내 상품 제목 강조 */
 .productTitle {
   margin: 0;
   font-weight: 700;
 }
 
+/* 남은 시간이 충분할 때 */
 .time {
   color: #1f2a44;
   font-weight: 600;
   font-size: 16px;
 }
 
+/* 남은 시간 없음/위험 구간을 빨간색으로 통일 */
 .timeDanger,
 .danger {
   color: #e04f4f;
@@ -415,16 +447,7 @@
   font-size: 16px;
 }
 
-.moreButton {
-  border: none;
-  background: #f7f9ff;
-  padding: 12px;
-  font-weight: 700;
-  color: #3b4f7f;
-  cursor: pointer;
-  border-top: 1px solid #eef1f6;
-}
-
+/* 반응형: 태블릿 이하에서는 단일 열 레이아웃으로 전환 */
 @media (max-width: 1024px) {
   .container {
     grid-template-columns: 1fr;
