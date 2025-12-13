@@ -1,4 +1,5 @@
-//이름바꾸었음 auctionFilters.js에서
+// 경매 목록 필터링/정렬 쿼리를 재사용하기 위한 헬퍼
+// - controller에서 WHERE 절/ORDER BY를 문자열로 조합하는 대신 이 모듈이 책임짐
 
 const buildConditions = (filters = {}) => {
   const { status, category, minPrice, maxPrice } = filters;
@@ -7,7 +8,7 @@ const buildConditions = (filters = {}) => {
 
   if (status && status !== "all") {
     if (status === "ended") {
-      // treat anything past 종료시간 as 종료로 간주
+      // 종료: DB status 또는 종료 시간이 현재 시각을 지난 경우 포함
       conds.push("(a.status = 'ended' OR a.end_time <= NOW())");
     } else if (status === "ongoing") {
       conds.push("(a.status = 'ongoing' AND a.end_time > NOW())");
@@ -16,15 +17,18 @@ const buildConditions = (filters = {}) => {
       vals.push(status);
     }
   }
+
   if (category) {
     conds.push("c.name = ?");
     vals.push(category);
   }
-  if (minPrice) {
+
+  if (minPrice != null && minPrice !== "") {
     conds.push("a.current_price >= ?");
     vals.push(Number(minPrice));
   }
-  if (maxPrice) {
+
+  if (maxPrice != null && maxPrice !== "") {
     conds.push("a.current_price <= ?");
     vals.push(Number(maxPrice));
   }

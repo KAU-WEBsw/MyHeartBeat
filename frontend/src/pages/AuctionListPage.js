@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./AuctionListPage.module.css";
 //import placeholder from "../assets/placeholder.svg";
-const placeholder = "/assets/placeholder.svg";
+const placeholder = "/assets/placeholder.svg"; // CRA dev 서버에서 /public 경로 이미지를 그대로 사용
 
 // formatCurrency: 모든 금액을 한국 원화 표기로 통일
 // - input: 숫자 또는 문자열로 들어온 가격
@@ -46,13 +46,14 @@ function AuctionListPage() {
   const fetchAuctions = async () => {
     const params = new URLSearchParams();
     params.append("page", page);
-    params.append("pageSize", 9);
+    params.append("pageSize", 9); // 3열 카드 레이아웃이기 때문에 9개(3줄) 단위 페이징
     if (categoryFilter) params.append("category", categoryFilter);
     params.append("sort", sortBy);
 
     try {
+      // GET /api/auctions : 서버 컨트롤러에서 페이지네이션 + 정렬 적용
       const res = await fetch(`/api/auctions?${params.toString()}`);
-      const data = await res.json();
+      const data = await res.json(); // { items: Auction[], total: number, pageSize: number }
       if (res.ok) {
         // normalized: 종료된 경매도 상세보기를 허용하기 때문에 status 필드를 클라이언트에서 덮어씀
         const items = data.items || [];
@@ -80,7 +81,7 @@ function AuctionListPage() {
   const fetchCategories = async () => {
     try {
       const res = await fetch("/api/auctions/categories");
-      const data = await res.json();
+      const data = await res.json(); // { categories: string[] }
       if (res.ok && Array.isArray(data.categories)) {
         setCategories(data.categories);
       }
@@ -117,6 +118,7 @@ function AuctionListPage() {
   }, [page, totalPages]);
 
   // categoryList: API 응답이 없을 때 보여줄 기본 카테고리 네 가지
+  // categoryList: DB에 카테고리가 비어있을 때도 UX 가 비지 않도록 고정 목록 제공
   const categoryList = categories.length
     ? categories
     : ["명품 / 패션", "전자기기", "미술품 / 컬렉션", "취미 / 기타"];
@@ -169,12 +171,14 @@ function AuctionListPage() {
                 setPage(1);
               }}
             >
+              {/* option 순서: 기본값은 최신순, 인기순과 고가순은 보조 지표라 뒤로 배치 */}
               <option value="latest">최신순</option>
               <option value="popular">입찰수 많은 순</option>
               <option value="price">가격 높은 순</option>
             </select>
           </div>
 
+          {/* 카드 그리드: 3열 정방형 카드, 각 article이 한 경매 */}
           <div className={styles.grid}>
             {auctions.map((item) => {
               // ended: 서버 status 와 별개로 종료 시간을 추가 확인
@@ -184,6 +188,7 @@ function AuctionListPage() {
                 <article className={styles.card} key={item.id}>
                   <div className={styles.cardImage}>
                     <img src={item.image_url || placeholder} alt={item.title} />
+                    {/* status badge: 진행중은 초록, 종료는 회색 (module.css에서 지정) */}
                     <span
                       className={`${styles.status} ${
                         ended ? styles.statusEnded : styles.statusOngoing
@@ -219,6 +224,7 @@ function AuctionListPage() {
                         </p>
                       </div>
                     </div>
+                    {/* CTA: 종료된 경매는 상세보기, 진행중은 입찰 → 같은 버튼 위치에서 액션만 바뀜 */}
                     <button
                       className={styles.bidButton}
                       onClick={() => {
@@ -246,6 +252,7 @@ function AuctionListPage() {
           {/* 전역에서 트리거되는 로그인 모달 처리: 간단한 DOM 레벨 모달 */}
           <LoginRequiredModal />
 
+          {/* 페이지네이션: 좌우 화살표 + 최대 5개 버튼, hover/focus 스타일은 CSS에서 지정 */}
           <div className={styles.pagination}>
             <button
               disabled={page === 1}
@@ -298,6 +305,7 @@ function LoginRequiredModal() {
   if (!visible) return null;
 
   return (
+    // design note: overlay 투명도 0.4, 중앙 카드 폭 320px → 로그인 모달과 일관된 크기
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
       <div style={{ background: "#fff", padding: 24, borderRadius: 8, width: 320, textAlign: "center" }}>
         <p style={{ marginBottom: 16 }}>{message}</p>
@@ -311,7 +319,10 @@ function LoginRequiredModal() {
           >
             로그인
           </button>
-          <button onClick={() => setVisible(false)} style={{ padding: "8px 12px" }}>
+          <button
+            onClick={() => setVisible(false)}
+            style={{ padding: "8px 12px" }}
+          >
             취소
           </button>
         </div>
