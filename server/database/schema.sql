@@ -31,6 +31,8 @@ CREATE TABLE categories (
 CREATE TABLE auctions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     seller_id INT NOT NULL,
+    seller_nickname VARCHAR(50) NULL,
+    seller_email VARCHAR(255) NULL,
     category_id INT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,

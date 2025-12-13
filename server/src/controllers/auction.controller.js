@@ -25,10 +25,10 @@ exports.createAuction = async (req, res) => {
     const raw = req.body || {};
 
     // 디버깅 로그: 들어오는 폼/파일/세션 정보를 빠르게 확인하기 위함
-    console.log('--- createAuction body ---', raw);
-    console.log('--- createAuction file ---', req.file);
-    console.log('--- createAuction headers cookie ---', req.headers?.cookie);
-    console.log('--- createAuction session user ---', req.session?.user);
+    console.log("--- createAuction body ---", raw);
+    console.log("--- createAuction file ---", req.file);
+    console.log("--- createAuction headers cookie ---", req.headers?.cookie);
+    console.log("--- createAuction session user ---", req.session?.user);
     const title = raw.title ?? raw.name;
     const categoryId = raw.categoryId ?? raw.category ?? raw.category_id;
     const description = raw.description ?? raw.desc;
@@ -46,7 +46,10 @@ exports.createAuction = async (req, res) => {
 
     // 세션에서 판매자 아이디 우선, 없으면 바디에서(여러 위치 허용)
     const sessionSellerId =
-      req.session?.user?.id ?? req.session?.userId ?? req.session?.user?.userId ?? null;
+      req.session?.user?.id ??
+      req.session?.userId ??
+      req.session?.user?.userId ??
+      null;
     const parsedSellerId =
       sessionSellerId != null
         ? Number(sessionSellerId)
@@ -77,15 +80,32 @@ exports.createAuction = async (req, res) => {
 
     const status = "ongoing";
     const currentPrice = parsedStartPrice;
+    // 판매자 정보(닉네임, 이메일)를 users 테이블에서 조회하여 같이 저장
+    let sellerNickname = null;
+    let sellerEmail = null;
+    try {
+      const [userRows] = await db.query(
+        `SELECT nickname, email FROM users WHERE id = ? LIMIT 1`,
+        [parsedSellerId]
+      );
+      if (userRows && userRows.length > 0) {
+        sellerNickname = userRows[0].nickname || null;
+        sellerEmail = userRows[0].email || null;
+      }
+    } catch (err) {
+      console.warn('failed to fetch seller info', err);
+    }
 
     const [result] = await db.query(
       `INSERT INTO auctions
-        (seller_id, category_id, title, description, image_url,
+        (seller_id, seller_nickname, seller_email, category_id, title, description, image_url,
          start_price, current_price,
          immediate_purchase_price, status, end_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         parsedSellerId,
+        sellerNickname,
+        sellerEmail,
         parsedCategoryId || null,
         title,
         description || null,
