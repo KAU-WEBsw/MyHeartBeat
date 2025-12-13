@@ -6,6 +6,20 @@ import "./Header.css";
 function Header() {
   const navigate = useNavigate();
 
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  let user = null;
+  try {
+    if (stored) user = JSON.parse(stored);
+  } catch (e) {
+    user = null;
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    // 향후 서버 로그아웃 API 호출 가능
+    navigate('/');
+  };
+
   return (
     <header className="header">
       {/* 로고 + 타이틀 → 클릭 시 경매 리스트로 이동 */}
@@ -49,10 +63,21 @@ function Header() {
           경매 등록
         </button>
 
-        {/* 프로필 */}
-        <div className="profile-avatar">
-          <span>MS</span>
-        </div>
+        {/* 로그인 / 로그아웃 버튼 */}
+        {user ? (
+          <>
+            <button className="header-text-btn" onClick={() => navigate('/mypage')}>
+              {user.nickname || '마이페이지'}
+            </button>
+            <button className="header-text-btn" onClick={handleLogout}>
+              로그아웃
+            </button>
+          </>
+        ) : (
+          <button className="header-text-btn" onClick={() => navigate('/login')}>
+            로그인
+          </button>
+        )}
       </div>
     </header>
   );

@@ -263,8 +263,24 @@ function AuctionListPage() {
                     </div>
                     <button
                       className={styles.bidButton}
-                      disabled={ended}
-                      onClick={() => navigate(`/product/${item.id}`)}
+                      onClick={() => {
+                        // 로그인 여부 확인 (localStorage에 저장된 user 기준)
+                        const stored = localStorage.getItem("user");
+                        if (!stored) {
+                          // 로그인 유도 모달
+                          const ev = new CustomEvent("show-login-modal", {
+                            detail: { message: "로그인 시 사용할 수 있는 기능입니다." },
+                          });
+                          window.dispatchEvent(ev);
+                          return;
+                        }
+                        // 로그인 되어 있을 경우: 종료된 경매면 접근 차단
+                        if (ended) {
+                          alert("이미 종료된 경매입니다.");
+                          return;
+                        }
+                        navigate(`/product/${item.id}`);
+                      }}
                     >
                       {ended ? "종료됨" : "입찰하기"}
                     </button>
@@ -273,6 +289,9 @@ function AuctionListPage() {
               );
             })}
           </div>
+
+          {/* 전역에서 트리거되는 로그인 모달 처리: 간단한 DOM 레벨 모달 */}
+          <LoginRequiredModal />
 
           <div className={styles.pagination}>
             <button
@@ -304,3 +323,44 @@ function AuctionListPage() {
 }
 
 export default AuctionListPage;
+
+// ---------------------------
+// LoginRequiredModal 컴포넌트
+// ---------------------------
+function LoginRequiredModal() {
+  const [visible, setVisible] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const handler = (e) => {
+      setMessage(e?.detail?.message || "로그인 시 사용할 수 있는 기능입니다.");
+      setVisible(true);
+    };
+    window.addEventListener("show-login-modal", handler);
+    return () => window.removeEventListener("show-login-modal", handler);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
+      <div style={{ background: "#fff", padding: 24, borderRadius: 8, width: 320, textAlign: "center" }}>
+        <p style={{ marginBottom: 16 }}>{message}</p>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <button
+            onClick={() => {
+              setVisible(false);
+              window.location.href = "/login";
+            }}
+            style={{ padding: "8px 12px" }}
+          >
+            로그인
+          </button>
+          <button onClick={() => setVisible(false)} style={{ padding: "8px 12px" }}>
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

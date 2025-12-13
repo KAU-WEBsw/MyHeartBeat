@@ -17,14 +17,16 @@ const toDateTimeLocal = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   const pad = (num) => String(num).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
 function AuctionCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
-  const isEditMode = useMemo(() => Boolean(editId), [editId]); // 쿼리로 들어온 id가 있으면 수정 모드
+  const isEditMode = useMemo(() => Boolean(editId), [editId]);
 
   const [form, setForm] = useState({
     title: "",
@@ -33,23 +35,25 @@ function AuctionCreatePage() {
     startPrice: "",
     buyNowPrice: "",
     endDate: "",
-    imageUrl: "",
   });
 
   const [previewImage, setPreviewImage] = useState(null);
+
+  // ✅ 수정: 실제 파일 객체 저장
+  const [imageFile, setImageFile] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ 수정: 파일 업로드 처리
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreviewImage(url);
-    setForm((prev) => ({ ...prev, imageUrl: url }));
-    // TODO: 나중에 실제 파일 업로드 구현
+
+    setImageFile(file); // ⭐ 실제 파일 저장
+    setPreviewImage(URL.createObjectURL(file)); // 미리보기용
   };
 
   useEffect(() => {
@@ -57,12 +61,16 @@ function AuctionCreatePage() {
 
     const fetchAuction = async () => {
       try {
-        const res = await fetch(`/api/auctions/${editId}`);
+        const res = await fetch(`/api/auctions/${editId}`, {
+          credentials: "include",
+        });
         const data = await res.json();
+
         if (!res.ok) {
           alert(data.message || "경매 정보를 불러오지 못했습니다.");
           return;
         }
+
         setForm({
           title: data.title || "",
           categoryId: data.category_id ? String(data.category_id) : "",
@@ -70,9 +78,10 @@ function AuctionCreatePage() {
           startPrice: data.start_price ?? "",
           buyNowPrice: data.immediate_purchase_price ?? "",
           endDate: toDateTimeLocal(data.end_time),
-          imageUrl: data.image_url || "",
         });
+
         setPreviewImage(data.image_url || null);
+        setImageFile(null); // ✅ 수정: 수정 모드에서는 새 파일 없으면 null
       } catch (error) {
         console.error(error);
         alert("경매 정보를 불러오지 못했습니다.");
@@ -85,30 +94,61 @@ function AuctionCreatePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // MySQL DATETIME 형식으로 살짝 변환
     const endTime = form.endDate
       ? form.endDate.replace("T", " ") + ":00"
       : null;
 
     try {
       const endpoint = isEditMode ? `/api/auctions/${editId}` : "/api/auctions";
+
+      // ✅ 수정: FormData 사용
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append(
+        "categoryId",
+        form.categoryId ? Number(form.categoryId) : ""
+      );
+      formData.append("description", form.description);
+      formData.append(
+        "startPrice",
+        form.startPrice !== "" ? Number(form.startPrice) : ""
+      );
+      formData.append(
+        "immediatePurchasePrice",
+        form.buyNowPrice ? Number(form.buyNowPrice) : ""
+      );
+      formData.append("endTime", endTime);
+
+      // ✅ 수정: 파일이 있을 때만 추가
+      if (imageFile) {
+        formData.append("image", imageFile); // ⭐ 서버와 key 이름 맞추기
+      }
+
+      // ✅ 추가: 로컬스토리지에 저장된 로그인 정보가 있으면 sellerId를 함께 첨부
+
+      try {
+        const stored = localStorage.getItem("user");
+        console.log("[debug] localStorage.user =", stored);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.id) formData.append("sellerId", parsed.id);
+        }
+      } catch (err) {
+        console.error("parse user from localStorage failed", err);
+      }
+
+      // 디버그: 실제로 전송되는 FormData 항목들을 로그로 출력
+      try {
+        const entries = Array.from(formData.entries());
+        console.log("[debug] formData entries:", entries);
+      } catch (err) {
+        console.warn("[debug] unable to read formData entries", err);
+      }
+
       const res = await fetch(endpoint, {
         method: isEditMode ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: form.title,
-          categoryId: form.categoryId ? Number(form.categoryId) : null,
-          description: form.description,
-          imageUrl: form.imageUrl || null, // TODO: 이미지 업로드 붙이면 실제 URL
-          startPrice: form.startPrice !== "" ? Number(form.startPrice) : null,
-          immediatePurchasePrice: form.buyNowPrice
-            ? Number(form.buyNowPrice)
-            : null,
-          endTime, // ✅ 종료 시간만 전송
-          sellerId: 1, // TODO: 로그인한 사용자 id로 변경
-        }),
+        body: formData, // ⭐ JSON 아님
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -119,7 +159,6 @@ function AuctionCreatePage() {
       }
 
       alert(`경매 ${isEditMode ? "수정" : "등록"} 완료!`);
-      // ✅ 등록/수정 후 경매 상세 페이지로 이동
       navigate(isEditMode ? `/product/${editId}` : "/auction/list");
     } catch (error) {
       console.error(error);
@@ -134,13 +173,16 @@ function AuctionCreatePage() {
       <main className={styles.main}>
         <div className={styles.pageHeader}>
           <h1>{isEditMode ? "경매 수정" : "경매 등록"}</h1>
-          <p>{isEditMode ? "기존 등록 내용을 수정합니다." : "경매에 올릴 상품 정보를 자세히 입력해주세요."}</p>
+          <p>
+            {isEditMode
+              ? "기존 등록 내용을 수정합니다."
+              : "경매에 올릴 상품 정보를 자세히 입력해주세요."}
+          </p>
         </div>
 
         <form className={styles.layout} onSubmit={handleSubmit}>
           {/* 왼쪽 영역 */}
           <div className={styles.leftColumn}>
-            {/* 기본 정보 */}
             <section className={styles.card}>
               <h2 className={styles.sectionTitle}>기본 정보</h2>
 
@@ -151,7 +193,6 @@ function AuctionCreatePage() {
                 <input
                   className={styles.input}
                   name="title"
-                  placeholder="상품명을 입력하세요"
                   value={form.title}
                   onChange={handleChange}
                   required
@@ -182,7 +223,6 @@ function AuctionCreatePage() {
                 <textarea
                   className={styles.textarea}
                   name="description"
-                  placeholder="상품에 대한 자세한 설명을 입력해주세요"
                   rows={4}
                   value={form.description}
                   onChange={handleChange}
@@ -190,7 +230,7 @@ function AuctionCreatePage() {
               </div>
             </section>
 
-            {/* 상품 이미지 */}
+            {/* 이미지 업로드 */}
             <section className={styles.card}>
               <h2 className={styles.sectionTitle}>상품 이미지</h2>
 
@@ -200,13 +240,10 @@ function AuctionCreatePage() {
                   <p className={styles.imageText}>
                     이미지를 드래그하거나 클릭해서 업로드
                   </p>
-                  <p className={styles.imageSubText}>
-                    최대 10MB, JPG / PNG 파일만 가능
-                  </p>
                 </div>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/jpg"
                   className={styles.imageInput}
                   onChange={handleImageChange}
                 />
@@ -219,46 +256,31 @@ function AuctionCreatePage() {
 
               <div className={styles.gridTwo}>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label}>
-                    시작가 <span className={styles.required}>*</span>
-                  </label>
-                  <div className={styles.inputWithSuffix}>
-                    <input
-                      className={styles.input}
-                      name="startPrice"
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={form.startPrice}
-                      onChange={handleChange}
-                      required
-                    />
-                    <span className={styles.suffix}>원</span>
-                  </div>
+                  <label className={styles.label}>시작가 *</label>
+                  <input
+                    className={styles.input}
+                    name="startPrice"
+                    type="number"
+                    value={form.startPrice}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.label}>즉시 구매가</label>
-                  <div className={styles.inputWithSuffix}>
-                    <input
-                      className={styles.input}
-                      name="buyNowPrice"
-                      type="number"
-                      min="0"
-                      placeholder="입력하지 않으면 미설정"
-                      value={form.buyNowPrice}
-                      onChange={handleChange}
-                    />
-                    <span className={styles.suffix}>원</span>
-                  </div>
+                  <input
+                    className={styles.input}
+                    name="buyNowPrice"
+                    type="number"
+                    value={form.buyNowPrice}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
 
-              {/* 종료 시간 */}
               <div className={styles.fieldGroup}>
-                <label className={styles.label}>
-                  경매 종료 시간 <span className={styles.required}>*</span>
-                </label>
+                <label className={styles.label}>경매 종료 시간 *</label>
                 <input
                   className={styles.input}
                   type="datetime-local"
@@ -271,11 +293,10 @@ function AuctionCreatePage() {
             </section>
           </div>
 
-          {/* 오른쪽 사이드 영역 */}
+          {/* 오른쪽 영역 */}
           <div className={styles.rightColumn}>
-            {/* 미리보기 카드 */}
             <section className={styles.previewCard}>
-              <h3 className={styles.previewTitle}>미리보기</h3>
+              <h3>미리보기</h3>
               <div className={styles.previewImageBox}>
                 {previewImage ? (
                   <img
@@ -285,41 +306,13 @@ function AuctionCreatePage() {
                   />
                 ) : (
                   <span className={styles.previewPlaceholder}>
-                    상품 이미지를 업로드하면 여기에서 미리보기로 보여요
+                    이미지를 업로드하면 미리보기가 표시됩니다
                   </span>
                 )}
               </div>
-              <div className={styles.previewInfo}>
-                <div className={styles.previewName}>
-                  {form.title || "상품명 미입력"}
-                </div>
-                <div className={styles.previewMeta}>
-                  {form.categoryId
-                    ? `카테고리: ${
-                        CATEGORY_LABELS[form.categoryId] || "알 수 없음"
-                      }`
-                    : "카테고리 미선택"}
-                </div>
-                <div className={styles.previewPrice}>
-                  시작가{" "}
-                  <strong>
-                    {form.startPrice
-                      ? `${Number(form.startPrice).toLocaleString()}원`
-                      : "미설정"}
-                  </strong>
-                </div>
-              </div>
             </section>
 
-            {/* 안내 박스 + 버튼 */}
             <section className={styles.guideCard}>
-              <h3>등록 전 확인사항</h3>
-              <ul>
-                <li>거래가 불가능한 상품이 아닌지 한 번 더 확인해주세요.</li>
-                <li>허위 정보 기재 시 경매가 강제 종료될 수 있습니다.</li>
-                <li>이미지에는 개인정보가 노출되지 않도록 주의해주세요.</li>
-              </ul>
-
               <button type="submit" className={styles.submitButton}>
                 {isEditMode ? "경매 수정" : "경매 등록"}
               </button>
