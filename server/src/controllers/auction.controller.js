@@ -80,32 +80,29 @@ exports.createAuction = async (req, res) => {
 
     const status = "ongoing";
     const currentPrice = parsedStartPrice;
-    // 판매자 정보(닉네임, 이메일)를 users 테이블에서 조회하여 같이 저장
+    // 판매자 정보(닉네임)를 users 테이블에서 조회하여 같이 저장
     let sellerNickname = null;
-    let sellerEmail = null;
     try {
       const [userRows] = await db.query(
-        `SELECT nickname, email FROM users WHERE id = ? LIMIT 1`,
+        `SELECT nickname FROM users WHERE id = ? LIMIT 1`,
         [parsedSellerId]
       );
       if (userRows && userRows.length > 0) {
         sellerNickname = userRows[0].nickname || null;
-        sellerEmail = userRows[0].email || null;
       }
     } catch (err) {
-      console.warn('failed to fetch seller info', err);
+      console.warn("failed to fetch seller info", err);
     }
 
     const [result] = await db.query(
       `INSERT INTO auctions
-        (seller_id, seller_nickname, seller_email, category_id, title, description, image_url,
+        (seller_id, seller_nickname, category_id, title, description, image_url,
          start_price, current_price,
          immediate_purchase_price, status, end_time)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         parsedSellerId,
         sellerNickname,
-        sellerEmail,
         parsedCategoryId || null,
         title,
         description || null,
