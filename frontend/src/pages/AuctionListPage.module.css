@@ -1,9 +1,11 @@
+/* 페이지 전체 배경과 베이스 레이아웃 설정 */
 .page {
   background: #f4f6fb;
   min-height: 100vh;
 }
 
 .content {
+  /* 좌측 필터(260px) + 우측 메인(자동) 레이아웃, gap 은 20px 로 여유 */
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
@@ -12,6 +14,7 @@
   padding: 20px 20px 0;
 }
 
+/* 필터/카테고리 카드 영역 */
 .sidebar {
   background: #fff;
   border: 1px solid #e5e8f0;
@@ -22,6 +25,7 @@
   height: fit-content;
 }
 
+/* 상품 등록 CTA 는 그러데이션 버튼으로 강조 */
 .primaryButton {
   background: linear-gradient(90deg, #4c6fff, #528bff);
   color: #fff;
@@ -32,6 +36,7 @@
   cursor: pointer;
 }
 
+/* 필터 카드 박스 - 하위 h4/ul 과 함께 사용 */
 .cardBox {
   border: 1px solid #eef1f6;
   border-radius: 10px;
@@ -45,6 +50,7 @@
   color: #1f2a44;
 }
 
+/* 기본 UL 대신 들여쓰기를 주어 트리처럼 보이게 함 */
 .cardBox ul {
   margin: 0;
   padding-left: 14px;
@@ -54,47 +60,8 @@
   font-size: 14px;
 }
 
-.filterRow {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: #4d5875;
-}
-
-.slider {
-  display: grid;
-  gap: 8px;
-}
-
-.sliderTrack {
-  background: #e7ecf6;
-  border-radius: 6px;
-  height: 6px;
-  position: relative;
-}
-
-.sliderThumb {
-  position: absolute;
-  top: -6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #4c6fff;
-  box-shadow: 0 2px 6px rgba(76, 111, 255, 0.35);
-}
-
-.sliderValue {
-  color: #6c7791;
-}
-
-.checkbox {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #4d5875;
-}
-
+/* 추가 필터 UI 를 모두 제거했으므로 이 지점에는 더 이상 별도 입력 스타일이 없음 */
+/* 우측 메인 카드 컨테이너 */
 .mainArea {
   background: #fff;
   border: 1px solid #e5e8f0;
@@ -104,6 +71,7 @@
   gap: 16px;
 }
 
+/* 목록 상단 헤더 영역 */
 .listHeader {
   display: flex;
   justify-content: space-between;
@@ -121,6 +89,7 @@
   font-size: 14px;
 }
 
+/* 정렬 Select - 기본 select 대비 라운드 처리 */
 .sortSelect {
   border: 1px solid #d9deeb;
   border-radius: 10px;
@@ -129,12 +98,14 @@
   background: #f7f9ff;
 }
 
+/* 경매 카드 그리드 - 자동으로 칼럼을 줄 세움 */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 14px;
 }
 
+/* 각 경매 카드의 기본 테두리/그림자 */
 .card {
   background: #fff;
   border: 1px solid #e6eaf3;
@@ -145,6 +116,7 @@
   grid-template-rows: 160px 1fr;
 }
 
+/* 카드 상단 이미지: 고정 높이 */
 .cardImage {
   position: relative;
   background: #dfe6f7;
@@ -157,6 +129,7 @@
   display: block;
 }
 
+/* 경매 상태 뱃지: currentColor 을 활용해 ongoing/ended 색만 변경 */
 .status {
   position: absolute;
   top: 10px;
@@ -178,12 +151,14 @@
   color: #7c8499;
 }
 
+/* 카드 본문 콘텐츠 */
 .cardBody {
   padding: 12px 12px 16px;
   display: grid;
   gap: 10px;
 }
 
+/* 제목과 카테고리 텍스트만 남았으므로 간단한 수평 정렬만 유지 */
 .cardTop {
   display: flex;
   justify-content: space-between;
@@ -195,21 +170,14 @@
   font-size: 16px;
 }
 
+/* 카테고리 라벨 색상 */
 .category {
   margin: 0;
   color: #6c7791;
   font-size: 13px;
 }
 
-.wish {
-  border: 1px solid #e6eaf3;
-  background: #f7f9ff;
-  border-radius: 10px;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
-}
-
+/* 입찰가/입찰수/남은시간 정보를 그리드로 나열 */
 .meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -217,16 +185,19 @@
   align-items: center;
 }
 
+/* 숫자 정렬을 오른쪽으로 맞추기 */
 .metaCol {
   text-align: right;
 }
 
+/* 메타 정보 라벨 */
 .label {
   margin: 0;
   font-size: 12px;
   color: #6c7791;
 }
 
+/* 현재가 강조 */
 .price {
   margin: 2px 0 0;
   font-weight: 800;
@@ -234,11 +205,13 @@
   color: #1f2a44;
 }
 
+/* 종료 임박 경고 색상 */
 .danger {
   color: #e04f4f;
   font-weight: 700;
 }
 
+/* 카드 하단 CTA 버튼 스타일 */
 .bidButton {
   width: 100%;
   background: linear-gradient(90deg, #386bff, #5490ff);
@@ -256,6 +229,7 @@
   cursor: not-allowed;
 }
 
+/* 페이지네이션 영역 */
 .pagination {
   display: flex;
   justify-content: center;
@@ -263,6 +237,7 @@
   gap: 8px;
 }
 
+/* 페이지 버튼 기본 스타일 */
 .pagination button {
   border: 1px solid #d9deeb;
   background: #fff;
@@ -271,6 +246,7 @@
   cursor: pointer;
 }
 
+/* 현재 페이지 버튼에 브랜드 색상 적용 */
 .activePage {
   background: #386bff;
   color: white;
@@ -291,30 +267,3 @@
   font-weight: 700;
 }
 
-.priceInputs {
-  display: grid;
-  gap: 6px;
-}
-
-.priceInputs input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #d8deec;
-  border-radius: 8px;
-}
-
-.applyBtn {
-  background: #2f5dff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.wishActive {
-  background: #ffeef2;
-  color: #e04f4f;
-  border-color: #e04f4f;
-}

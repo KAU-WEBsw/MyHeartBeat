@@ -363,12 +363,15 @@ exports.getAuctions = async (req, res) => {
       sort = "latest",
     } = req.query;
 
-    const pageNum = Number(page) || 1;
-    const size = Number(pageSize) || 9;
+    // page/pageSize는 문자열로 들어오기 때문에 Number 변환 후 최소 1로 클램프
+    const pageNum = Math.max(1, Number(page) || 1);
+    const size = Math.max(1, Number(pageSize) || 9);
     const offset = (pageNum - 1) * size;
 
+    // WHERE 절 생성을 utils로 위임하여 동일 로직을 여러 컨트롤러에서 재사용
     const filter = buildConditions({ status, category, minPrice, maxPrice });
 
+    // sortMap: 프론트 select 옵션(latest/popular/price/endingSoon)에 대응
     const sortMap = {
       latest: "a.created_at DESC",
       popular:
@@ -378,6 +381,7 @@ exports.getAuctions = async (req, res) => {
     };
     const orderBy = sortMap[sort] || sortMap.latest;
 
+    // countSql: 위 filter.whereClause를 공유해 전체 개수(total)를 계산
     const countSql =
       "SELECT COUNT(*) AS total FROM auctions a LEFT JOIN categories c ON a.category_id = c.id " +
       filter.whereClause;
@@ -392,7 +396,7 @@ exports.getAuctions = async (req, res) => {
       .query(selectSql, [...filter.values, size, offset])
       .then((r) => r[0]);
 
-    res.json({ total, page: pageNum, pageSize: size, items });
+    res.json({ total, page: pageNum, pageSize: size, items }); // 프론트 목록 카드가 그대로 사용
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "경매 목록을 불러오지 못했습니다." });
@@ -408,6 +412,7 @@ exports.getCategories = async (_req, res) => {
     const [rows] = await db.query(
       "SELECT name FROM categories ORDER BY name ASC"
     );
+    // 프론트 사이드바는 단순 문자열 배열만 필요하므로 name 컬럼만 추출
     res.json({ categories: rows.map((r) => r.name) });
   } catch (error) {
     console.error(error);
