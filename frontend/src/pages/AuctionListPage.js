@@ -93,8 +93,8 @@ function AuctionListPage() {
     statusFilter === "ongoing"
       ? "진행중인 경매"
       : statusFilter === "ended"
-        ? "종료된 경매"
-        : "전체 경매";
+      ? "종료된 경매"
+      : "전체 경매";
 
   const handleCategory = (cat) => {
     setCategoryFilter(cat === categoryFilter ? "" : cat);
@@ -202,7 +202,9 @@ function AuctionListPage() {
           <div className={styles.listHeader}>
             <div>
               <h2>경매 목록</h2>
-              <p>총 {totalCount}개의 {statusLabel}가 있습니다</p>
+              <p>
+                총 {totalCount}개의 {statusLabel}가 있습니다
+              </p>
             </div>
             <select
               className={styles.sortSelect}
@@ -269,7 +271,9 @@ function AuctionListPage() {
                         if (!stored) {
                           // 로그인 유도 모달
                           const ev = new CustomEvent("show-login-modal", {
-                            detail: { message: "로그인 시 사용할 수 있는 기능입니다." },
+                            detail: {
+                              message: "로그인 시 사용할 수 있는 기능입니다.",
+                            },
                           });
                           window.dispatchEvent(ev);
                           return;
@@ -343,8 +347,26 @@ function LoginRequiredModal() {
   if (!visible) return null;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
-      <div style={{ background: "#fff", padding: 24, borderRadius: 8, width: 320, textAlign: "center" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2000,
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          padding: 24,
+          borderRadius: 8,
+          width: 320,
+          textAlign: "center",
+        }}
+      >
         <p style={{ marginBottom: 16 }}>{message}</p>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           <button
@@ -356,7 +378,10 @@ function LoginRequiredModal() {
           >
             로그인
           </button>
-          <button onClick={() => setVisible(false)} style={{ padding: "8px 12px" }}>
+          <button
+            onClick={() => setVisible(false)}
+            style={{ padding: "8px 12px" }}
+          >
             취소
           </button>
         </div>
