@@ -105,6 +105,17 @@ function ProductDetailPage() {
     return () => clearInterval(interval);
   }, [product?.end_time, product?.status, id]);
 
+  // 입찰 금액 입력할 때 숫자만 허용
+  const handleBidChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    setBidAmount(value);
+  };
+
+  // 입찰 금액에 콤마 넣기
+  const formatBidAmount = (value) => {
+    if (!value) return "";
+    return Number(value).toLocaleString();
+  };
 
   // 입찰하기
   const handleBidSubmit = async (e) => {
