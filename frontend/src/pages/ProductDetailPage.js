@@ -306,7 +306,7 @@ function ProductDetailPage() {
                     <div className={styles.timerLabel}>경매 종료</div>
                     <div className={styles.endedInfo}>
                       <div className={styles.winningPrice}>
-                        낙찰가:{" "}
+                        낙찰가 :{" "}
                         {Number(
                           product.winning_bid_amount || product.current_price
                         ).toLocaleString()}
