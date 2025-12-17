@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./AuctionListPage.module.css";
-//import placeholder from "../assets/placeholder.svg";
-const placeholder = "/assets/placeholder.svg";
+const placeholder = "/assets/placeholder.svg"; // CRA dev 서버에서 /public 경로 이미지를 그대로 사용
 
+// formatCurrency: 모든 금액을 한국 원화 표기로 통일
+// - input: 숫자 또는 문자열로 들어온 가격
+// - output: ₩ 기호가 붙은 3자리 콤마 문자열
 const formatCurrency = (value = 0) =>
   `₩${Number(value).toLocaleString("ko-KR")}`;
 
@@ -138,9 +140,7 @@ function AuctionListPage() {
               {categoryList.map((cat) => (
                 <li
                   key={cat}
-                  className={
-                    categoryFilter === cat ? styles.categoryActive : ""
-                  }
+                  className={categoryFilter === cat ? styles.categoryActive : ""}
                   onClick={() => handleCategory(cat)}
                 >
                   {cat}
@@ -248,9 +248,7 @@ function AuctionListPage() {
                     <div className={styles.meta}>
                       <div>
                         <p className={styles.label}>현재 입찰가</p>
-                        <p className={styles.price}>
-                          {formatCurrency(item.current_price)}
-                        </p>
+                        <p className={styles.price}>{formatCurrency(item.current_price)}</p>
                       </div>
                       <div className={styles.metaCol}>
                         <p className={styles.label}>입찰 수</p>
@@ -258,27 +256,20 @@ function AuctionListPage() {
                       </div>
                       <div className={styles.metaCol}>
                         <p className={styles.label}>남은 시간</p>
-                        <p className={ended ? styles.danger : undefined}>
-                          {timeLeft(item.end_time)}
-                        </p>
+                        <p className={ended ? styles.danger : undefined}>{timeLeft(item.end_time)}</p>
                       </div>
                     </div>
                     <button
                       className={styles.bidButton}
                       onClick={() => {
-                        // 로그인 여부 확인 (localStorage에 저장된 user 기준)
                         const stored = localStorage.getItem("user");
                         if (!stored) {
-                          // 로그인 유도 모달
                           const ev = new CustomEvent("show-login-modal", {
-                            detail: {
-                              message: "로그인 시 사용할 수 있는 기능입니다.",
-                            },
+                            detail: { message: "로그인 시 사용할 수 있는 기능입니다." },
                           });
                           window.dispatchEvent(ev);
                           return;
                         }
-                        // 로그인 되어 있을 경우: 종료된 경매면 접근 차단
                         if (ended) {
                           alert("이미 종료된 경매입니다.");
                           return;
@@ -294,29 +285,18 @@ function AuctionListPage() {
             })}
           </div>
 
-          {/* 전역에서 트리거되는 로그인 모달 처리: 간단한 DOM 레벨 모달 */}
           <LoginRequiredModal />
 
           <div className={styles.pagination}>
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
+            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
               &lt;
             </button>
             {pages.map((num) => (
-              <button
-                key={num}
-                className={num === page ? styles.activePage : ""}
-                onClick={() => setPage(num)}
-              >
+              <button key={num} className={num === page ? styles.activePage : ""} onClick={() => setPage(num)}>
                 {num}
               </button>
             ))}
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
+            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
               &gt;
             </button>
           </div>
@@ -347,26 +327,8 @@ function LoginRequiredModal() {
   if (!visible) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2000,
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          padding: 24,
-          borderRadius: 8,
-          width: 320,
-          textAlign: "center",
-        }}
-      >
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}>
+      <div style={{ background: "#fff", padding: 24, borderRadius: 8, width: 320, textAlign: "center" }}>
         <p style={{ marginBottom: 16 }}>{message}</p>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           <button
@@ -378,10 +340,7 @@ function LoginRequiredModal() {
           >
             로그인
           </button>
-          <button
-            onClick={() => setVisible(false)}
-            style={{ padding: "8px 12px" }}
-          >
+          <button onClick={() => setVisible(false)} style={{ padding: "8px 12px" }}>
             취소
           </button>
         </div>
