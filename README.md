@@ -237,7 +237,7 @@ MyHeartBeat/
 
 ### 📋 AuctionListPage (경매 목록) - `/auction/list`
 - 경매 목록 카드 형태로 표시
-- 정렬 기능 (최신순, 인기순, 가격순, 마감임박순)
+- 정렬 기능 (최신순, 가격 높은 순)
 - 경매 상세 페이지로 이동
 
 ### ➕ AuctionCreatePage (경매 등록) - `/auction/new`
