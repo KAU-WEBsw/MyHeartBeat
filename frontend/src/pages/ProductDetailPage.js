@@ -1,31 +1,25 @@
-// frontend/src/pages/ProductDetailPage.js
-// 경매 상품 상세 페이지 컴포넌트
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./ProductDetailPage.module.css";
 
-// API 기본 URL
-const API_BASE_URL = "http://localhost:4000";
-
 function ProductDetailPage() {
-  const { id } = useParams(); // URL에서 경매 ID 가져오기
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  // 상태 관리
-  const [product, setProduct] = useState(null); // 경매 상품 정보
-  const [bids, setBids] = useState([]); // 입찰 내역
-  const [error, setError] = useState(null); // 에러 상태
-  const [bidAmount, setBidAmount] = useState(""); // 입찰 금액 입력값
-  const [user, setUser] = useState(null); // 로그인한 사용자 정보
+  const [product, setProduct] = useState(null);
+  const [bids, setBids] = useState([]);
+  const [error, setError] = useState(null);
+  const [bidAmount, setBidAmount] = useState("");
+  const [user, setUser] = useState(null);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
-  }); // 남은 시간
+  });
 
-  // 로그인 사용자 정보 가져오기
+  // 로그인한 사용자 정보 가져오기
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -33,18 +27,18 @@ function ProductDetailPage() {
         const parsed = JSON.parse(stored);
         setUser(parsed);
       } catch (err) {
-        console.error("사용자 정보 파싱 오류:", err);
+        console.error("사용자 정보 오류:", err);
       }
     }
   }, []);
 
-  // 경매 정보 조회
+  // 경매 정보 가져오기
   useEffect(() => {
     let isMounted = true;
 
     async function fetchAuction() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/auctions/${id}`, {
+        const res = await fetch(`/api/auctions/${id}`, {
           credentials: "include",
         });
 
@@ -69,28 +63,29 @@ function ProductDetailPage() {
     };
   }, [id]);
 
-  // 타이머 계산
+  // 남은 시간 계산
   useEffect(() => {
     if (!product?.end_time || product.status === "ended") return;
 
-    const calculateTimeLeft = async () => {
+    const calculateTimeLeft = () => {
       const now = new Date().getTime();
       const end = new Date(product.end_time).getTime();
       const difference = end - now;
 
       if (difference <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        // 경매 시간이 끝나면 경매 정보 다시 불러오기 (자동 종료 처리)
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auctions/${id}`);
-          if (res.ok) {
-            const data = await res.json();
+        // 경매 시간이 끝나면 경매 정보 다시 불러오기
+        fetch(`/api/auctions/${id}`, {
+          credentials: "include",
+        })
+          .then((res) => res.json())
+          .then((data) => {
             setProduct(data);
             setBids(data.bids ?? []);
-          }
-        } catch (error) {
-          console.error(error);
-        }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         return;
       }
 
@@ -110,24 +105,13 @@ function ProductDetailPage() {
     return () => clearInterval(interval);
   }, [product?.end_time, product?.status, id]);
 
-  // 입찰 금액 입력 핸들러 (숫자만 허용)
-  const handleBidChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, "");
-    setBidAmount(value);
-  };
 
-  // 입찰 금액 포맷팅 (천 단위 콤마)
-  const formatBidAmount = (value) => {
-    if (!value) return "";
-    return Number(value).toLocaleString();
-  };
-
-  // 입찰하기 핸들러
+  // 입찰하기
   const handleBidSubmit = async (e) => {
     e.preventDefault();
     if (!product) return;
 
-    // 로그인 체크
+    // 로그인 확인
     if (!user) {
       alert("로그인이 필요합니다.");
       navigate("/login");
@@ -143,13 +127,13 @@ function ProductDetailPage() {
     // 입찰가는 현재가보다 높아야 함
     if (value <= product.current_price) {
       alert(
-        `입찰가는 현재가(${product.current_price.toLocaleString()}원)보다 높아야 합니다.`
+        `입찰가는 현재가(${Number(product.current_price).toLocaleString()}원)보다 높아야 합니다.`
       );
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auctions/${id}/bids`, {
+      const res = await fetch(`/api/auctions/${id}/bids`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -172,10 +156,9 @@ function ProductDetailPage() {
       setBidAmount("");
 
       // 경매 정보 다시 불러오기
-      const refreshRes = await fetch(
-        `${API_BASE_URL}/api/auctions/${id}`,
-        { credentials: "include" }
-      );
+      const refreshRes = await fetch(`/api/auctions/${id}`, {
+        credentials: "include",
+      });
       if (refreshRes.ok) {
         const refreshData = await refreshRes.json();
         setProduct(refreshData);
@@ -187,9 +170,9 @@ function ProductDetailPage() {
     }
   };
 
-  // 즉시 구매하기 핸들러
+  // 즉시 구매하기
   const handleImmediatePurchase = async () => {
-    // 로그인 체크
+    // 로그인 확인
     if (!user) {
       alert("로그인이 필요합니다.");
       navigate("/login");
@@ -204,30 +187,25 @@ function ProductDetailPage() {
       return;
     }
 
-    if (
-      !window.confirm(
-        `정말 ${Number(
-          product.immediate_purchase_price
-        ).toLocaleString()}원에 즉시 구매하시겠습니까?`
-      )
-    ) {
+    const confirmMessage = `정말 ${Number(
+      product.immediate_purchase_price
+    ).toLocaleString()}원에 즉시 구매하시겠습니까?`;
+
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/auctions/${id}/purchase`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            buyerId: user.id,
-          }),
-        }
-      );
+      const res = await fetch(`/api/auctions/${id}/purchase`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          buyerId: user.id,
+        }),
+      });
 
       const data = await res.json();
 
@@ -239,10 +217,9 @@ function ProductDetailPage() {
       alert("즉시 구매 성공!");
 
       // 경매 정보 다시 불러오기
-      const refreshRes = await fetch(
-        `${API_BASE_URL}/api/auctions/${id}`,
-        { credentials: "include" }
-      );
+      const refreshRes = await fetch(`/api/auctions/${id}`, {
+        credentials: "include",
+      });
       if (refreshRes.ok) {
         const refreshData = await refreshRes.json();
         setProduct(refreshData);
@@ -271,7 +248,6 @@ function ProductDetailPage() {
       <Header />
 
       <main className={styles.main}>
-        {/* Breadcrumb Navigation */}
         <nav className={styles.breadcrumb}>
           <span onClick={() => navigate("/")}>Home</span>
           <span className={styles.breadcrumbSeparator}>›</span>
@@ -281,7 +257,6 @@ function ProductDetailPage() {
         </nav>
 
         <div className={styles.content}>
-          {/* Left: Image Gallery */}
           <section className={styles.gallery}>
             <div className={styles.imageContainer}>
               <img
@@ -292,9 +267,7 @@ function ProductDetailPage() {
             </div>
           </section>
 
-          {/* Right: Product Info & Seller Info */}
           <div className={styles.rightColumn}>
-            {/* Product Info */}
             <section className={styles.infoPanel}>
               <div className={styles.productInfo}>
                 <h1 className={styles.title}>{product.title}</h1>
@@ -324,7 +297,6 @@ function ProductDetailPage() {
                   </div>
                 </div>
 
-                {/* Timer or Ended Status */}
                 {product.status === "ended" ? (
                   <div className={styles.timerBox}>
                     <div className={styles.timerLabel}>경매 종료</div>
@@ -350,7 +322,6 @@ function ProductDetailPage() {
                   </div>
                 )}
 
-                {/* Bid Form */}
                 {product.status !== "ended" && (
                   <>
                     <div className={styles.bidSection}>
@@ -376,7 +347,6 @@ function ProductDetailPage() {
                       </div>
                     </div>
 
-                    {/* Immediate Purchase Button */}
                     {product.immediate_purchase_price && (
                       <button
                         className={styles.immediatePurchaseButton}
@@ -394,7 +364,6 @@ function ProductDetailPage() {
               </div>
             </section>
 
-            {/* Seller Info */}
             <section className={styles.sellerInfo}>
               <div className={styles.sellerRow}>
                 <span className={styles.sellerTitle}>판매자 정보</span>
@@ -406,7 +375,6 @@ function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Product Description */}
         <section className={styles.descriptionSection}>
           <h2 className={styles.descriptionTitle}>물품 설명</h2>
           <div className={styles.descriptionContent}>
