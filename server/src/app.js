@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const session = require("express-session");
 const db = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const auctionRoutes = require("./routes/auction.routes");
@@ -11,10 +12,25 @@ const path = require("path"); // ✅ 수정
 const app = express();
 
 // ✅ 수정: 쿠키 세션 사용 시 CORS에서 credentials 허용 필요
+// CORS: 개발 환경에서는 프론트 주소로 고정하여 credentials 허용
 app.use(
   cors({
-    origin: true, // ✅ 수정: 개발 중엔 true로 두면 요청 origin 허용(필요시 프론트 주소로 고정)
-    credentials: true, // ✅ 수정: 쿠키 포함 요청 허용
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
+// Session middleware: 반드시 라우트 등록 전에 적용
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dev-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // 개발 시 false, 프로덕션(https)에서는 true로 설정 필요
+      sameSite: "lax",
+    },
   })
 );
 
