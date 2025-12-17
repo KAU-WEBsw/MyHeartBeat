@@ -5,15 +5,7 @@ const { buildConditions, buildListQuery } = require("../utils/auction.filters");
 // 만료된 경매를 일괄 종료하고 낙찰 정보까지 반영하는 유틸
 const { closeExpiredAuctions } = require("../utils/auction.closer");
 
-// 공통 유틸: 경매 존재 여부 및 판매자 검증
-const findAuctionOr404 = async (id, res) => {
-  const [rows] = await db.query("SELECT * FROM auctions WHERE id = ?", [id]);
-  if (!rows || rows.length === 0) {
-    if (res) res.status(404).json({ message: "경매를 찾을 수 없습니다." });
-    return null;
-  }
-  return rows[0];
-};
+// (참고) 경매 존재 확인 로직은 필요한 핸들러 내부로 이동되었습니다.
 
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
@@ -66,6 +58,17 @@ exports.createAuction = async (req, res) => {
       immediatePurchasePrice != null && immediatePurchasePrice !== ""
         ? Number(immediatePurchasePrice)
         : null;
+
+    // 검증: 즉시구매가가 주어졌으면 시작가보다 크거나 같아야 함
+    if (
+      parsedImmediate != null &&
+      parsedStartPrice != null &&
+      Number(parsedImmediate) < Number(parsedStartPrice)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "즉시구매가는 시작가보다 크거나 같아야 합니다." });
+    }
 
     // 필수값 체크: parsedSellerId 는 null/undefined 검사
     if (
@@ -164,12 +167,22 @@ exports.updateAuction = async (req, res) => {
         : null; // ✅ 수정
 
     if (!parsedSellerId) {
-      // ✅ 수정
       return res.status(400).json({ message: "판매자 정보가 필요합니다." });
     }
 
-    const auction = await findAuctionOr404(id, res); // 수정 대상 조회
-    if (!auction) return;
+    // 로컬 유틸: 경매 존재 여부 확인 (updateAuction 내부에서만 사용)
+    const findAuctionOr404Local = async (auctionId) => {
+      const [rows] = await db.query("SELECT * FROM auctions WHERE id = ?", [
+        auctionId,
+      ]);
+      if (!rows || rows.length === 0) return null;
+      return rows[0];
+    };
+
+    const auction = await findAuctionOr404Local(id);
+    if (!auction) {
+      return res.status(404).json({ message: "경매를 찾을 수 없습니다." });
+    }
 
     // 판매자 검증
     if (Number(auction.seller_id) !== Number(parsedSellerId)) {
