@@ -83,37 +83,57 @@ MySQL Workbench에서 실행:
 
 ```bash
 MyHeartBeat/
-├── frontend/               # React 기반 사용자 화면
+├── frontend/                    # React 기반 사용자 화면
 │   ├── public/
-│   │   └── assets/         # 이미지 / 아이콘
+│   │   ├── assets/              # 이미지 / 아이콘
+│   │   │   └── floating/        # 플로팅 아이콘 이미지
+│   │   └── index.html
 │   └── src/
-│       ├── components/     # 공통 컴포넌트 (Header 등)
-│       └── pages/          # 주요 화면 페이지
-│           ├── LandingPage.js
-│           ├── LoginPage.js
-│           ├── SignupPage.js
-│           ├── MainPage.js
-│           ├── AuctionListPage.js
-│           ├── AuctionCreatePage.js
-│           ├── ProductDetailPage.js
-│           └── MyPage.js
+│       ├── components/          # 공통 컴포넌트
+│       │   ├── Header.js        # 상단 네비게이션 헤더 컴포넌트
+│       │   └── Header.css
+│       ├── pages/               # 주요 화면 페이지
+│       │   ├── LandingPage.js           # 랜딩 페이지 (첫 화면)
+│       │   ├── LandingPage.module.css
+│       │   ├── LoginPage.js              # 로그인 페이지
+│       │   ├── LoginPage.module.css
+│       │   ├── SignupPage.js             # 회원가입 페이지
+│       │   ├── SignupPage.module.css
+│       │   ├── MainPage.js               # 메인 페이지
+│       │   ├── MainPage.module.css
+│       │   ├── AuctionListPage.js         # 경매 목록 페이지
+│       │   ├── AuctionListPage.module.css
+│       │   ├── AuctinoCreatePage.js       # 경매 등록 페이지
+│       │   ├── AuctionCreatePage.module.css
+│       │   ├── ProductDetailPage.js       # 경매 상세 페이지 (입찰, 즉시구매)
+│       │   ├── ProductDetailPage.module.css
+│       │   ├── MyPage.js                  # 마이페이지 (내 경매, 입찰 내역)
+│       │   └── MyPage.module.css
+│       ├── App.js               # React Router 설정 및 라우팅
+│       └── index.js             # React 앱 진입점
 │
-└── server/                 # Node.js + Express 백엔드
+└── server/                      # Node.js + Express 백엔드
     ├── database/
-    │   └── schema.sql      # 테이블 구조
-    ├── config/
-    │   └── db.js           # DB 연결 설정
-    ├── controllers/        # 기능 로직
-    │   ├── auth.controller.js
-    │   ├── auction.controller.js
-    │   ├── like.controller.js
-    │   └── mypage.controller.js
-    ├── routes/             # API 라우팅
-    │   ├── auth.routes.js
-    │   ├── auction.routes.js
-    │   ├── like.routes.js
-    │   └── mypage.routes.js
-    └── app.js              
+    │   └── schema.sql           # 데이터베이스 스키마 (테이블 생성 및 초기 데이터)
+    ├── uploads/                 # 업로드된 이미지 파일 저장 폴더
+    └── src/
+        ├── config/
+        │   └── db.js            # MySQL 연결 풀 설정
+        ├── controllers/         # 기능 로직 (비즈니스 로직 처리)
+        │   ├── auth.controller.js        # 로그인, 회원가입 처리
+        │   ├── auction.controller.js     # 경매 CRUD, 입찰, 즉시구매 처리
+        │   └── mypage.controller.js      # 마이페이지 데이터 조회
+        ├── routes/              # API 라우팅 (엔드포인트 정의)
+        │   ├── auth.routes.js            # /api/auth/* 라우트
+        │   ├── auction.routes.js         # /api/auctions/* 라우트
+        │   ├── like.routes.js            # /api/likes/* 라우트 (찜 기능)
+        │   └── mypage.routes.js          # /api/mypage/* 라우트
+        ├── utils/               # 유틸리티 함수
+        │   ├── auction.closer.js         # 만료된 경매 자동 종료 처리
+        │   ├── auction.filters.js         # 경매 목록 필터링 (상태, 카테고리, 가격)
+        │   └── upload.js                 # 이미지 업로드 미들웨어 (multer 설정)
+        ├── app.js               # Express 앱 설정 (미들웨어, 라우트 등록)
+        └── server.js            # 서버 실행 파일 (포트 리스닝)
 
 ```
 
