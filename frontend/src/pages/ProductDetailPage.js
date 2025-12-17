@@ -259,14 +259,6 @@ function ProductDetailPage() {
       <Header />
 
       <main className={styles.main}>
-        <nav className={styles.breadcrumb}>
-          <span onClick={() => navigate("/")}>Home</span>
-          <span className={styles.breadcrumbSeparator}>›</span>
-          <span className={styles.breadcrumbCurrent}>
-            {product.category_name}
-          </span>
-        </nav>
-
         <div className={styles.content}>
           <section className={styles.gallery}>
             <div className={styles.imageContainer}>
@@ -281,6 +273,7 @@ function ProductDetailPage() {
           <div className={styles.rightColumn}>
             <section className={styles.infoPanel}>
               <div className={styles.productInfo}>
+                <div className={styles.category}>{product.category_name}</div>
                 <h1 className={styles.title}>{product.title}</h1>
 
                 <div className={styles.priceInfo}>
