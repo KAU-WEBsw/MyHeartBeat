@@ -3,14 +3,14 @@ const path = require("path");
 const fs = require("fs");
 
 // 업로드 폴더 경로
-const uploadDir = path.join(__dirname, "..", "..", "uploads"); // ✅ 수정: server/uploads
+const uploadDir = path.join(__dirname, "..", "..", "uploads");
 
-// ✅ 업로드 폴더가 없으면 생성
+// 업로드 폴더가 없으면 생성
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ✅ 저장 방식 설정
+// 저장 방식 설정
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// ✅ 이미지 파일만 허용
+// 이미지 파일만 허용
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/jpeg" ||
@@ -35,7 +35,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// ✅ multer 인스턴스 생성
+// multer 인스턴스 생성
 const upload = multer({
   storage,
   fileFilter,

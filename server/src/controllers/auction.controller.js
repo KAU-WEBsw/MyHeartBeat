@@ -5,11 +5,9 @@ const { buildConditions, buildListQuery } = require("../utils/auction.filters");
 // 만료된 경매를 일괄 종료하고 낙찰 정보까지 반영하는 유틸
 const { closeExpiredAuctions } = require("../utils/auction.closer");
 
-// (참고) 경매 존재 확인 로직은 필요한 핸들러 내부로 이동되었습니다.
 
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
-//  - start_time은 DB에서 DEFAULT CURRENT_TIMESTAMP 사용
 // ==========================================================
 exports.createAuction = async (req, res) => {
   try {
@@ -130,7 +128,6 @@ exports.createAuction = async (req, res) => {
 
 // ==========================================================
 // 🟦 경매 수정 API (PUT /api/auctions/:id)
-//  - 입찰이 하나라도 있는 경우 시작가/현재가는 수정 불가
 // ==========================================================
 exports.updateAuction = async (req, res) => {
   try {
@@ -146,25 +143,25 @@ exports.updateAuction = async (req, res) => {
       endTime,
     } = req.body;
 
-    // ✅ 수정: sellerId는 세션에서 우선 가져오고, 없으면 body fallback
+    // sellerId는 세션에서 우선 가져오고, 없으면 body fallback
     const sessionSellerId =
-      req.session?.user?.id ?? req.session?.userId ?? req.session?.user?.userId; // ✅ 수정
+      req.session?.user?.id ?? req.session?.userId ?? req.session?.user?.userId;
     const parsedSellerId =
       sessionSellerId != null
-        ? Number(sessionSellerId) // ✅ 수정
+        ? Number(sessionSellerId)
         : sellerId != null && sellerId !== ""
         ? Number(sellerId)
-        : null; // ✅ 수정
+        : null;
 
-    // ✅ 수정: multipart/form-data로 오면 문자열일 수 있으니 안전 변환
+    // multipart/form-data로 오면 문자열일 수 있으니 안전 변환
     const parsedCategoryId =
-      categoryId != null && categoryId !== "" ? Number(categoryId) : null; // ✅ 수정
+      categoryId != null && categoryId !== "" ? Number(categoryId) : null;
     const parsedStartPrice =
-      startPrice != null && startPrice !== "" ? Number(startPrice) : null; // ✅ 수정
+      startPrice != null && startPrice !== "" ? Number(startPrice) : null;
     const parsedImmediate =
       immediatePurchasePrice != null && immediatePurchasePrice !== ""
         ? Number(immediatePurchasePrice)
-        : null; // ✅ 수정
+        : null;
 
     if (!parsedSellerId) {
       return res.status(400).json({ message: "판매자 정보가 필요합니다." });
@@ -186,7 +183,6 @@ exports.updateAuction = async (req, res) => {
 
     // 판매자 검증
     if (Number(auction.seller_id) !== Number(parsedSellerId)) {
-      // ✅ 수정
       return res
         .status(403)
         .json({ message: "본인이 등록한 경매만 수정할 수 있습니다." });
@@ -212,18 +208,18 @@ exports.updateAuction = async (req, res) => {
 
     // 가격은 입찰이 없을 때만 수정
     const nextStartPrice =
-      canEditPrice && parsedStartPrice != null // ✅ 수정
-        ? Number(parsedStartPrice) // ✅ 수정
+      canEditPrice && parsedStartPrice != null
+        ? Number(parsedStartPrice)
         : Number(auction.start_price);
     const nextCurrentPrice =
-      canEditPrice && parsedStartPrice != null // ✅ 수정
-        ? Number(parsedStartPrice) // ✅ 수정
+      canEditPrice && parsedStartPrice != null
+        ? Number(parsedStartPrice)
         : Number(auction.current_price);
 
-    // ✅ 수정: 업로드 파일이 있으면 그걸 우선 사용 (없으면 기존 imageUrl / 기존 DB값 유지)
+    // 업로드 파일이 있으면 그걸 우선 사용 (없으면 기존 imageUrl / 기존 DB값 유지)
     const finalImageUrl = req.file
-      ? `/uploads/${req.file.filename}` // ✅ 수정
-      : imageUrl ?? auction.image_url; // ✅ 수정
+      ? `/uploads/${req.file.filename}`
+      : imageUrl ?? auction.image_url;
 
     await db.query(
       `UPDATE auctions
@@ -238,12 +234,12 @@ exports.updateAuction = async (req, res) => {
        WHERE id = ?`,
       [
         title ?? auction.title,
-        parsedCategoryId ?? auction.category_id, // ✅ 수정
+        parsedCategoryId ?? auction.category_id,
         description ?? auction.description,
-        finalImageUrl, // ✅ 수정
+        finalImageUrl,
         nextStartPrice,
         nextCurrentPrice,
-        parsedImmediate ?? auction.immediate_purchase_price, // ✅ 수정
+        parsedImmediate ?? auction.immediate_purchase_price,
         endTime ?? auction.end_time,
         id,
       ]
@@ -438,69 +434,66 @@ exports.getCategories = async (_req, res) => {
 // ==========================================================
 exports.createBid = async (req, res) => {
   try {
-    const { id } = req.params; // 경매 ID
-    const { bidderId, amount } = req.body; // 입찰자 ID, 입찰 금액
+    const { id } = req.params;
+    const { bidderId, amount } = req.body;
 
-    // 필수값 체크
+    // 필수 정보 확인
     if (!bidderId || !amount) {
-      return res
-        .status(400)
-        .json({ message: "입찰자 ID와 입찰 금액을 입력해주세요." });
+      return res.status(400).json({
+        message: "입찰자 ID와 입찰 금액을 입력해주세요.",
+      });
     }
 
-    // 경매 정보 조회
-    const [auctions] = await db.query(`SELECT * FROM auctions WHERE id = ?`, [
-      id,
-    ]);
-
-    if (auctions.length === 0) {
+    // 경매 정보 가져오기
+    const [rows] = await db.query("SELECT * FROM auctions WHERE id = ?", [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ message: "경매를 찾을 수 없습니다." });
     }
 
-    const auction = auctions[0];
+    const auction = rows[0];
 
-    // 경매 상태 체크
+    // 경매가 진행 중인지 확인
     if (auction.status !== "ongoing") {
       return res.status(400).json({ message: "종료된 경매입니다." });
     }
 
-    // 경매 시간 체크
+    // 경매 시간 확인
     const now = new Date();
     const endTime = new Date(auction.end_time);
     if (now >= endTime) {
       return res.status(400).json({ message: "경매가 종료되었습니다." });
     }
 
-    // 판매자 체크
+    // 본인 경매에는 입찰 못함
     if (Number(auction.seller_id) === Number(bidderId)) {
       return res
         .status(400)
         .json({ message: "자신의 경매에는 입찰할 수 없습니다." });
     }
 
-    // 현재 최고 입찰가 조회
-    const [bids] = await db.query(
-      `SELECT MAX(amount) as max_amount FROM bids WHERE auction_id = ?`,
+    // 최고 입찰가 확인
+    const [bidRows] = await db.query(
+      "SELECT MAX(amount) as max_amount FROM bids WHERE auction_id = ?",
       [id]
     );
-    const currentMaxBid = bids[0]?.max_amount || auction.start_price;
-    const minBidAmount = Number(currentMaxBid) + 1;
+    const maxBid = bidRows[0]?.max_amount || auction.start_price;
+    const minAmount = Number(maxBid) + 1;
 
-    // 입찰 금액 체크
-    if (Number(amount) < minBidAmount) {
+    // 입찰 금액이 최소 금액보다 낮으면 안됨
+    if (Number(amount) < minAmount) {
       return res.status(400).json({
-        message: `입찰 금액은 최소 ${minBidAmount.toLocaleString()}원 이상이어야 합니다.`,
+        message: `입찰 금액은 최소 ${minAmount.toLocaleString()}원 이상이어야 합니다.`,
       });
     }
 
-    // 입찰 저장
+    // 입찰 정보 저장
     const [result] = await db.query(
-      `INSERT INTO bids (auction_id, bidder_id, amount) VALUES (?, ?, ?)`,
+      "INSERT INTO bids (auction_id, bidder_id, amount) VALUES (?, ?, ?)",
       [id, bidderId, amount]
     );
 
     // 경매 현재가 업데이트
-    await db.query(`UPDATE auctions SET current_price = ? WHERE id = ?`, [
+    await db.query("UPDATE auctions SET current_price = ? WHERE id = ?", [
       amount,
       id,
     ]);
@@ -521,45 +514,42 @@ exports.createBid = async (req, res) => {
 // ==========================================================
 exports.purchaseAuction = async (req, res) => {
   try {
-    const { id } = req.params; // 경매 ID
-    const { buyerId } = req.body; // 구매자 ID
+    const { id } = req.params;
+    const { buyerId } = req.body;
 
-    // 필수값 체크
+    // 구매자 ID 확인
     if (!buyerId) {
       return res.status(400).json({ message: "구매자 ID를 입력해주세요." });
     }
 
-    // 경매 정보 조회
-    const [auctions] = await db.query(`SELECT * FROM auctions WHERE id = ?`, [
-      id,
-    ]);
-
-    if (auctions.length === 0) {
+    // 경매 정보 가져오기
+    const [rows] = await db.query("SELECT * FROM auctions WHERE id = ?", [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ message: "경매를 찾을 수 없습니다." });
     }
 
-    const auction = auctions[0];
+    const auction = rows[0];
 
-    // 경매 상태 체크
+    // 경매가 진행 중인지 확인
     if (auction.status !== "ongoing") {
       return res.status(400).json({ message: "종료된 경매입니다." });
     }
 
-    // 경매 시간 체크
+    // 경매 시간 확인
     const now = new Date();
     const endTime = new Date(auction.end_time);
     if (now >= endTime) {
       return res.status(400).json({ message: "경매가 종료되었습니다." });
     }
 
-    // 즉시 구매가 체크
+    // 즉시 구매가가 있는지 확인
     if (!auction.immediate_purchase_price) {
       return res
         .status(400)
         .json({ message: "즉시 구매가가 설정되지 않았습니다." });
     }
 
-    // 즉시 구매가가 현재가보다 작거나 같으면 불가
+    // 현재가가 즉시 구매가보다 높으면 구매 못함
     if (
       Number(auction.immediate_purchase_price) <= Number(auction.current_price)
     ) {
@@ -568,14 +558,14 @@ exports.purchaseAuction = async (req, res) => {
       });
     }
 
-    // 판매자 체크
+    // 본인 경매는 구매 못함
     if (Number(auction.seller_id) === Number(buyerId)) {
       return res
         .status(400)
         .json({ message: "자신의 경매는 즉시 구매할 수 없습니다." });
     }
 
-    // 경매 종료 처리 및 현재가를 즉시 구매가로 변경
+    // 경매 종료 처리
     await db.query(
       `UPDATE auctions 
        SET status = 'ended', 
