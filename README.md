@@ -79,6 +79,75 @@ MySQL Workbench에서 실행:
 
 데이터베이스와 테이블이 생성됩니다.
 
+## 🗄️ 데이터베이스 구조
+
+### 테이블 목록
+
+#### 1. users (회원)
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | INT | 기본키 (자동증가) |
+| email | VARCHAR(255) | 이메일 (유니크) |
+| password_hash | VARCHAR(255) | 비밀번호 해시 |
+| nickname | VARCHAR(50) | 닉네임 |
+| created_at | TIMESTAMP | 가입일시 |
+
+#### 2. categories (카테고리)
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | INT | 기본키 (자동증가) |
+| name | VARCHAR(100) | 카테고리 이름 |
+
+#### 3. auctions (경매)
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | INT | 기본키 (자동증가) |
+| seller_id | INT | 판매자 ID (외래키: users.id) |
+| seller_nickname | VARCHAR(50) | 판매자 닉네임 (NULL 허용) |
+| category_id | INT | 카테고리 ID (외래키: categories.id) |
+| title | VARCHAR(255) | 경매 제목 |
+| description | TEXT | 경매 설명 |
+| image_url | VARCHAR(500) | 상품 이미지 URL |
+| start_price | DECIMAL(10,2) | 시작가 |
+| current_price | DECIMAL(10,2) | 현재가 |
+| immediate_purchase_price | DECIMAL(10,2) | 즉시 구매가 (NULL 허용) |
+| status | ENUM | 경매 상태 ('ongoing', 'ended') |
+| start_time | DATETIME | 경매 시작 시간 |
+| end_time | DATETIME | 경매 종료 시간 |
+| winner_id | INT | 낙찰자 ID (외래키: users.id, NULL 허용) |
+| winning_bid_amount | DECIMAL(10,2) | 낙찰가 (NULL 허용) |
+| created_at | TIMESTAMP | 등록일시 |
+
+#### 4. bids (입찰)
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | INT | 기본키 (자동증가) |
+| auction_id | INT | 경매 ID (외래키: auctions.id) |
+| bidder_id | INT | 입찰자 ID (외래키: users.id) |
+| amount | DECIMAL(10,2) | 입찰 금액 |
+| created_at | TIMESTAMP | 입찰일시 |
+
+### 테이블 관계도
+
+```
+users (회원)
+  ├── auctions.seller_id (판매자)
+  ├── auctions.winner_id (낙찰자)
+  └── bids.bidder_id (입찰자)
+
+categories (카테고리)
+  └── auctions.category_id
+
+auctions (경매)
+  └── bids.auction_id
+```
+
+### 초기 데이터
+
+- **카테고리**: 명품 / 패션, 전자기기, 미술품 / 컬렉션, 취미 / 기타
+- **테스트 사용자**: test1@example.com, test2@example.com
+- **샘플 경매**: 2개의 예시 경매 데이터 포함
+
 ## 📁 프로젝트 구조
 
 ```bash
