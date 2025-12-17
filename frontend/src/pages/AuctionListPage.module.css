@@ -5,24 +5,9 @@
 }
 
 .content {
-  /* 좌측 필터(260px) + 우측 메인(자동) 레이아웃, gap 은 20px 로 여유 */
-  max-width: 1280px;
+  max-width: 1040px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
-  padding: 20px 20px 0;
-}
-
-/* 필터/카테고리 카드 영역 */
-.sidebar {
-  background: #fff;
-  border: 1px solid #e5e8f0;
-  border-radius: 12px;
-  padding: 18px;
-  display: grid;
-  gap: 16px;
-  height: fit-content;
+  padding: 20px 20px 40px;
 }
 
 /* 상품 등록 CTA 는 그러데이션 버튼으로 강조 */
@@ -31,33 +16,9 @@
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px 16px;
   font-weight: 700;
   cursor: pointer;
-}
-
-/* 필터 카드 박스 - 하위 h4/ul 과 함께 사용 */
-.cardBox {
-  border: 1px solid #eef1f6;
-  border-radius: 10px;
-  padding: 14px;
-  background: #fafbff;
-}
-
-.cardBox h4 {
-  margin: 0 0 12px;
-  font-size: 15px;
-  color: #1f2a44;
-}
-
-/* 기본 UL 대신 들여쓰기를 주어 트리처럼 보이게 함 */
-.cardBox ul {
-  margin: 0;
-  padding-left: 14px;
-  display: grid;
-  gap: 8px;
-  color: #4d5875;
-  font-size: 14px;
 }
 
 /* 추가 필터 UI 를 모두 제거했으므로 이 지점에는 더 이상 별도 입력 스타일이 없음 */
@@ -78,15 +39,19 @@
   align-items: center;
 }
 
+.listActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .listHeader h2 {
   margin: 0;
   font-size: 20px;
 }
 
 .listHeader p {
-  margin: 4px 0 0;
-  color: #6c7791;
-  font-size: 14px;
+  display: none;
 }
 
 /* 정렬 Select - 기본 select 대비 라운드 처리 */
@@ -224,46 +189,32 @@
   cursor: pointer;
 }
 
+.bidButtonEnded {
+  background: #d6d9e0;
+  color: #4a5263;
+  cursor: default;
+}
+
 .bidButton:disabled {
   background: #c1c8db;
   cursor: not-allowed;
 }
 
-/* 페이지네이션 영역 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 페이지 버튼 기본 스타일 */
-.pagination button {
-  border: 1px solid #d9deeb;
-  background: #fff;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-}
-
-/* 현재 페이지 버튼에 브랜드 색상 적용 */
-.activePage {
-  background: #386bff;
-  color: white;
-  border-color: #386bff;
-}
-
 @media (max-width: 980px) {
   .content {
-    grid-template-columns: 1fr;
+    padding: 16px;
   }
 
-  .sidebar {
-    order: 2;
+  .listHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
-}
-.categoryActive {
-  color: #2f5dff;
-  font-weight: 700;
+
+  .listActions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
