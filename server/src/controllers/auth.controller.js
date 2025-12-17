@@ -45,16 +45,49 @@ exports.login = async (req, res) => {
     }
 
     // 여기까지 왔으면 로그인 성공
-    res.status(200).json({
-      message: "로그인 성공",
-      user: {
+    // 세션에 사용자 정보 저장 (Express session 사용)
+    if (req.session) {
+      req.session.user = {
         id: user.id,
         email: user.email,
         nickname: user.nickname,
-      },
+      };
+    }
+
+    res.status(200).json({
+      message: "로그인 성공",
+      user: req.session
+        ? req.session.user
+        : { id: user.id, email: user.email, nickname: user.nickname },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "서버 오류" });
+  }
+};
+
+// 로그인된 사용자 확인 API
+exports.me = (req, res) => {
+  try {
+    res.json({ user: req.session?.user ?? null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ user: null });
+  }
+};
+
+// 로그아웃
+exports.logout = (req, res) => {
+  try {
+    if (req.session) {
+      req.session.destroy(() => {
+        res.json({ message: "로그아웃 완료" });
+      });
+    } else {
+      res.json({ message: "로그아웃 완료" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "로그아웃 실패" });
   }
 };

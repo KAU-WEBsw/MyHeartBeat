@@ -6,7 +6,8 @@ import "./Header.css";
 function Header() {
   const navigate = useNavigate();
 
-  const stored = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  const stored =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
   let user = null;
   try {
     if (stored) user = JSON.parse(stored);
@@ -15,9 +16,9 @@ function Header() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
     // 향후 서버 로그아웃 API 호출 가능
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -50,10 +51,12 @@ function Header() {
           경매 리스트
         </button>
 
-        {/* 마이페이지 */}
-        <button className="header-text-btn" onClick={() => navigate("/mypage")}>
-          마이페이지
-        </button>
+        {/* 마이페이지: 로그인 상태면 우측에 닉네임 버튼이 있으므로 중복 방지 */}
+        {!user && (
+          <button className="header-text-btn" onClick={() => navigate("/mypage")}>
+            마이페이지
+          </button>
+        )}
 
         {/* 경매 등록 */}
         <button
@@ -66,15 +69,21 @@ function Header() {
         {/* 로그인 / 로그아웃 버튼 */}
         {user ? (
           <>
-            <button className="header-text-btn" onClick={() => navigate('/mypage')}>
-              {user.nickname || '마이페이지'}
+            <button
+              className="header-text-btn"
+              onClick={() => navigate("/mypage")}
+            >
+              마이페이지
             </button>
             <button className="header-text-btn" onClick={handleLogout}>
               로그아웃
             </button>
           </>
         ) : (
-          <button className="header-text-btn" onClick={() => navigate('/login')}>
+          <button
+            className="header-text-btn"
+            onClick={() => navigate("/login")}
+          >
             로그인
           </button>
         )}
