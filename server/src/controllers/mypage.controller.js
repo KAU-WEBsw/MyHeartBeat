@@ -8,6 +8,15 @@ const defaultProfile = {
   email: "",
 };
 
+// currentPrice 를 항상 실제 최고 입찰가와 동기화하기 위한 공통 표현식
+// - auctions.current_price 가 오래된 값일 수 있어 bids 테이블의 최고가와 비교
+// - 입찰이 전혀 없으면 시작가(start_price)로 폴백
+const currentPriceExpr = `GREATEST(
+    IFNULL(a.current_price, 0),
+    IFNULL((SELECT MAX(amount) FROM bids WHERE auction_id = a.id), 0),
+    IFNULL(a.start_price, 0)
+  ) AS currentPrice`;
+
 exports.getDashboard = async (req, res) => {
   // URL 파라미터(userId)가 없으면 세션 사용자 → 그래도 없으면 1번 사용자로 fallback
   const sessionUserId =
@@ -32,7 +41,7 @@ exports.getDashboard = async (req, res) => {
     ] = await Promise.all([
       db.query("SELECT id, email, nickname FROM users WHERE id = ?", [userId]),
       db.query(
-        "SELECT a.id, a.title, c.name AS category, a.current_price AS currentPrice, a.status, a.end_time AS endTime, a.created_at AS registeredAt, " +
+        `SELECT a.id, a.title, c.name AS category, ${currentPriceExpr}, a.status, a.end_time AS endTime, a.created_at AS registeredAt, ` +
           "IFNULL((SELECT COUNT(*) FROM bids b WHERE b.auction_id = a.id), 0) AS bidCount, a.image_url " +
           "FROM auctions a " +
           "LEFT JOIN categories c ON a.category_id = c.id " +
@@ -41,15 +50,19 @@ exports.getDashboard = async (req, res) => {
         [userId]
       ),
       db.query(
-        "SELECT a.id, a.title, c.name AS category, a.current_price AS currentPrice, a.status, a.end_time AS endTime, a.image_url, " +
-          "MAX(b.amount) AS myBid, COUNT(*) AS bidCount " +
+        `SELECT a.id, a.title, c.name AS category, ${currentPriceExpr}, a.status, a.end_time AS endTime, a.image_url, ` +
+          "CASE " +
+          "  WHEN a.winner_id = ? THEN COALESCE(a.winning_bid_amount, a.immediate_purchase_price, a.current_price) " +
+          "  ELSE MAX(b.amount) " +
+          "END AS myBid, " +
+          "COUNT(*) AS bidCount " +
           "FROM bids b " +
           "JOIN auctions a ON b.auction_id = a.id " +
           "LEFT JOIN categories c ON a.category_id = c.id " +
           "WHERE b.bidder_id = ? " +
-          "GROUP BY a.id, a.title, c.name, a.current_price, a.status, a.end_time, a.image_url " +
+          "GROUP BY a.id, a.title, c.name, a.status, a.end_time, a.image_url, a.start_price, a.current_price, a.immediate_purchase_price, a.winner_id, a.winning_bid_amount " +
           "ORDER BY a.end_time DESC",
-        [userId]
+        [userId, userId]
       ),
       db.query(
         "SELECT COUNT(*) AS wins FROM auctions WHERE winner_id = ? AND end_time <= NOW()",
@@ -72,19 +85,21 @@ exports.getDashboard = async (req, res) => {
         }
       : defaultProfile;
 
-    // computeStatus: 프론트와 동일한 로직으로 서버에서도 종료 여부를 판단
-    const computeStatus = (endTime) =>
-      new Date(endTime).getTime() <= Date.now() ? "ended" : "ongoing";
+    // computeStatus: DB status가 'ended'면 즉시 종료로 판단, 아니면 시간 비교
+    const computeStatus = (status, endTime) =>
+      status === "ended" || new Date(endTime).getTime() <= Date.now()
+        ? "ended"
+        : "ongoing";
 
     // 프론트 카드에서 status/remainingTime을 쓰기 때문에 status를 서버에서 덮어씀
     const myAuctionsWithStatus = myAuctions.map((auction) => ({
       ...auction,
-      status: computeStatus(auction.endTime),
+      status: computeStatus(auction.status, auction.endTime),
     }));
 
     const bidHistoryWithStatus = bidHistory.map((bid) => ({
       ...bid,
-      status: computeStatus(bid.endTime),
+      status: computeStatus(bid.status, bid.endTime),
     }));
 
     // 반환 스키마: 프론트 MyPage 가 그대로 사용 (profile + stats + 리스트 2종)
