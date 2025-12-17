@@ -22,24 +22,6 @@
   font-weight: bold;
 }
 
-/* 중앙 검색창 영역 */
-.header-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.search-input {
-  width: 100%;
-  max-width: 520px;
-  height: 38px;
-  padding: 0 16px;
-  border: 1px solid #c9ccd2;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  font-size: 14px;
-}
-
 /* 오른쪽 버튼 영역 */
 .header-right {
   display: flex;
@@ -47,7 +29,7 @@
   gap: 16px;
 }
 
-/* 텍스트 버튼 (경매 리스트, 마이페이지) */
+/* 텍스트 버튼 (경매 리스트, 마이페이지, 로그인 등) */
 .header-text-btn {
   background: none;
   border: none;
@@ -77,7 +59,7 @@
   text-decoration: underline;
 }
 
-/* 프로필 */
+/* 프로필 아바타 */
 .profile-avatar {
   width: 32px;
   height: 32px;
