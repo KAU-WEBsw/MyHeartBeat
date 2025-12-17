@@ -21,9 +21,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/auction/new" element={<AuctionCreatePage />} />
         <Route path="/auction/list" element={<AuctionListPage />} />
-        <Route path="/list" element={<AuctionListPage />} />
         <Route path="/mypage" element={<MyPage />} />
-        <Route path="/mypage/:userId" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );

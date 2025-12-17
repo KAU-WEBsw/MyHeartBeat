@@ -166,6 +166,13 @@
   gap: 24px;
 }
 
+.category {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 1px;
+  font-weight: 500;
+}
+
 .title {
   font-size: 24px;
   font-weight: 700;
