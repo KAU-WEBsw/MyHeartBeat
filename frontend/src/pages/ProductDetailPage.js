@@ -5,6 +5,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import styles from "./ProductDetailPage.module.css";
 
+// API 기본 URL
+const API_BASE_URL = "http://localhost:4000";
+
 function ProductDetailPage() {
   const { id } = useParams(); // URL에서 경매 ID 가져오기
   const navigate = useNavigate();
@@ -14,6 +17,7 @@ function ProductDetailPage() {
   const [bids, setBids] = useState([]); // 입찰 내역
   const [error, setError] = useState(null); // 에러 상태
   const [bidAmount, setBidAmount] = useState(""); // 입찰 금액 입력값
+  const [user, setUser] = useState(null); // 로그인한 사용자 정보
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -21,13 +25,26 @@ function ProductDetailPage() {
     seconds: 0,
   }); // 남은 시간
 
+  // 로그인 사용자 정보 가져오기
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+      } catch (err) {
+        console.error("사용자 정보 파싱 오류:", err);
+      }
+    }
+  }, []);
+
   // 경매 정보 조회
   useEffect(() => {
     let isMounted = true;
 
     async function fetchAuction() {
       try {
-        const res = await fetch(`http://localhost:4000/api/auctions/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/auctions/${id}`, {
           credentials: "include",
         });
 
@@ -65,7 +82,7 @@ function ProductDetailPage() {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
         // 경매 시간이 끝나면 경매 정보 다시 불러오기 (자동 종료 처리)
         try {
-          const res = await fetch(`http://localhost:4000/api/auctions/${id}`);
+          const res = await fetch(`${API_BASE_URL}/api/auctions/${id}`);
           if (res.ok) {
             const data = await res.json();
             setProduct(data);
@@ -110,6 +127,13 @@ function ProductDetailPage() {
     e.preventDefault();
     if (!product) return;
 
+    // 로그인 체크
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      navigate("/login");
+      return;
+    }
+
     const value = Number(bidAmount.replace(/,/g, ""));
     if (Number.isNaN(value) || value <= 0) {
       alert("유효한 금액을 입력하세요.");
@@ -124,16 +148,15 @@ function ProductDetailPage() {
       return;
     }
 
-    const bidderId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
-
     try {
-      const res = await fetch(`http://localhost:4000/api/auctions/${id}/bids`, {
+      const res = await fetch(`${API_BASE_URL}/api/auctions/${id}/bids`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          bidderId: user.id,
           amount: value,
         }),
       });
@@ -150,7 +173,7 @@ function ProductDetailPage() {
 
       // 경매 정보 다시 불러오기
       const refreshRes = await fetch(
-        `http://localhost:4000/api/auctions/${id}`,
+        `${API_BASE_URL}/api/auctions/${id}`,
         { credentials: "include" }
       );
       if (refreshRes.ok) {
@@ -166,6 +189,13 @@ function ProductDetailPage() {
 
   // 즉시 구매하기 핸들러
   const handleImmediatePurchase = async () => {
+    // 로그인 체크
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      navigate("/login");
+      return;
+    }
+
     // 즉시 구매가가 현재가보다 작거나 같으면 불가
     if (
       Number(product.immediate_purchase_price) <= Number(product.current_price)
@@ -173,8 +203,6 @@ function ProductDetailPage() {
       alert("현재가가 즉시 구매가보다 높아 즉시 구매할 수 없습니다.");
       return;
     }
-
-    const buyerId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
 
     if (
       !window.confirm(
@@ -188,14 +216,16 @@ function ProductDetailPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/auctions/${id}/purchase`,
+        `${API_BASE_URL}/api/auctions/${id}/purchase`,
         {
           method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({
+            buyerId: user.id,
+          }),
         }
       );
 
@@ -210,7 +240,7 @@ function ProductDetailPage() {
 
       // 경매 정보 다시 불러오기
       const refreshRes = await fetch(
-        `http://localhost:4000/api/auctions/${id}`,
+        `${API_BASE_URL}/api/auctions/${id}`,
         { credentials: "include" }
       );
       if (refreshRes.ok) {
@@ -342,7 +372,7 @@ function ProductDetailPage() {
                         </div>
                       </form>
                       <div className={styles.bidderCount}>
-                        입찰자 : {bids.length}명
+                        입찰 : {bids.length}회
                       </div>
                     </div>
 
