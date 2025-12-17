@@ -154,13 +154,13 @@ function ProductDetailPage() {
 
   // 즉시 구매하기 핸들러
   const handleImmediatePurchase = async () => {
+    const buyerId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
+
     // 즉시 구매가가 현재가보다 작거나 같으면 불가
     if (Number(product.immediate_purchase_price) <= Number(product.current_price)) {
       alert("현재가가 즉시 구매가보다 높아 즉시 구매할 수 없습니다.");
       return;
     }
-
-    const buyerId = 2; // TODO: 실제 로그인한 사용자 ID로 변경
 
     if (!window.confirm(`정말 ${Number(product.immediate_purchase_price).toLocaleString()}원에 즉시 구매하시겠습니까?`)) {
       return;

@@ -8,8 +8,9 @@ const placeholder = "/assets/placeholder.svg"; // 모든 페이지에서 같은 
 // 금융값 표기 유틸: 경매 상세와 동일하게 ₩ + 콤마 포맷 유지
 const formatCurrency = (value = 0) => `₩${Number(value).toLocaleString("ko-KR")}`;
 
-// 경매 종료까지 남은 시간을 텍스트로 변환
-const timeLeft = (end) => {
+// 경매 종료까지 남은 시간을 텍스트로 변환 (상태가 ended면 즉시 종료 표시)
+const timeLeft = (end, status) => {
+  if (status === "ended") return "종료";
   const endDate = new Date(end);
   const diff = endDate.getTime() - Date.now();
   if (diff <= 0) return "종료";
@@ -46,7 +47,8 @@ function MyPage() {
   const navigate = useNavigate();
   const { userId } = useParams();
   const targetUserId = userId || userIdState; // URL 우선, 없으면 로그인 사용자
-  const isEnded = (endTime) => new Date(endTime).getTime() <= Date.now();
+  const isEnded = (status, endTime) =>
+    status === "ended" || new Date(endTime).getTime() <= Date.now();
 
   useEffect(() => {
     // 로그인 상태를 클라이언트에서 먼저 파악
@@ -112,8 +114,8 @@ function MyPage() {
           {/* 내가 올린 경매 카드 목록: 각 카드에는 상태 뱃지 + action 버튼 존재 */}
           <div className={styles.cardList}>
             {myAuctions.map((item) => {
-              const remainingTime = timeLeft(item.endTime);
-              const ended = isEnded(item.endTime);
+              const remainingTime = timeLeft(item.endTime, item.status);
+              const ended = isEnded(item.status, item.endTime);
               return (
                 <article key={item.id} className={styles.itemCard}>
                 {/* 이미지: 서버가 image_url 제공, 없으면 공통 placeholder */}
@@ -178,7 +180,7 @@ function MyPage() {
               <span>상태</span>
             </div>
             {bidHistory.map((item) => {
-              const ended = isEnded(item.endTime);
+              const ended = isEnded(item.status, item.endTime);
               return (
               <div
                 key={item.id}
@@ -205,7 +207,7 @@ function MyPage() {
                 <span className={styles.pricePrimary}>{formatCurrency(item.currentPrice)}</span>
                 <span className={styles.countStrong}>{item.bidCount}</span>
                 {/* timeDanger: 남은 시간이 임박하면 붉은색으로 강조 */}
-                <span className={styles.timeDanger}>{timeLeft(item.endTime)}</span>
+                <span className={styles.timeDanger}>{timeLeft(item.endTime, item.status)}</span>
                 <Badge status={ended ? "ended" : "ongoing"} />
               </div>
             );

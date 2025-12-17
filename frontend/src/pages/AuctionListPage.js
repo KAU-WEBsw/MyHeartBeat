@@ -14,7 +14,8 @@ const formatCurrency = (value = 0) =>
 // timeLeft: 경매 종료 시간까지 남은 시간을 "일 + 시간" 형태로 변환
 // - end: ISO 문자열 또는 Date 로 변환 가능한 값
 // - 차이가 0 이하이면 "종료" 문자열을 반환하여 UI 가 종료됨을 인지하도록 함
-const timeLeft = (end) => {
+const timeLeft = (end, status) => {
+  if (status === "ended") return "종료";
   const endDate = new Date(end);
   const diff = endDate.getTime() - Date.now();
   if (diff <= 0) return "종료";
@@ -24,7 +25,8 @@ const timeLeft = (end) => {
 };
 
 // isEnded: 종료 여부만 판단하는 단순 함수 → UI 로직에서만 사용
-const isEnded = (end) => new Date(end).getTime() <= Date.now();
+const isEnded = (status, end) =>
+  status === "ended" || new Date(end).getTime() <= Date.now();
 
 function AuctionListPage() {
   const navigate = useNavigate();
@@ -89,7 +91,7 @@ function AuctionListPage() {
           <div className={styles.grid}>
             {auctions.map((item) => {
               // ended: 종료 여부는 isEnded 함수 하나로만 판단
-              const ended = isEnded(item.end_time);
+              const ended = isEnded(item.status, item.end_time);
               return (
                 <article className={styles.card} key={item.id}>
                   <div className={styles.cardImage}>
@@ -126,13 +128,15 @@ function AuctionListPage() {
                       <div className={styles.metaCol}>
                         <p className={styles.label}>남은 시간</p>
                         <p className={ended ? styles.danger : undefined}>
-                          {timeLeft(item.end_time)}
+                          {timeLeft(item.end_time, item.status)}
                         </p>
                       </div>
                     </div>
                     {/* CTA: 종료된 경매는 상세보기, 진행중은 입찰 → 같은 버튼 위치에서 액션만 바뀜 */}
                     <button
-                      className={styles.bidButton}
+                      className={`${styles.bidButton} ${
+                        ended ? styles.bidButtonEnded : ""
+                      }`}
                       onClick={() => navigate(`/product/${item.id}`)}
                     >
                       {ended ? "상세보기" : "입찰하기"}

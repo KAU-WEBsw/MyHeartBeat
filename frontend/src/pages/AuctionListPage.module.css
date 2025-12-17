@@ -189,6 +189,12 @@
   cursor: pointer;
 }
 
+.bidButtonEnded {
+  background: #d6d9e0;
+  color: #4a5263;
+  cursor: default;
+}
+
 .bidButton:disabled {
   background: #c1c8db;
   cursor: not-allowed;
