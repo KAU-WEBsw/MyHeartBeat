@@ -6,12 +6,12 @@ const authRoutes = require("./routes/auth.routes");
 const auctionRoutes = require("./routes/auction.routes");
 const mypageRoutes = require("./routes/mypage.routes");
 
-// ✅ 수정: 업로드 폴더 정적 서빙을 위한 path 추가
-const path = require("path"); // ✅ 수정
+// 업로드 폴더 정적 서빙을 위한 path 추가
+const path = require("path");
 
 const app = express();
 
-// ✅ 수정: 쿠키 세션 사용 시 CORS에서 credentials 허용 필요
+// 쿠키 세션 사용 시 CORS에서 credentials 허용 필요
 // CORS: 개발 환경에서는 프론트 주소로 고정하여 credentials 허용
 app.use(
   cors({
@@ -34,13 +34,13 @@ app.use(
   })
 );
 
-// ✅ 수정: multipart/form-data는 multer가 처리하지만, text 필드가 들어올 수 있어 추가해도 안전
+// multipart/form-data는 multer가 처리하지만, text 필드가 들어올 수 있어 추가해도 안전
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // ✅ 수정
+app.use(express.urlencoded({ extended: true }));
 
-// ✅ 수정: 업로드된 파일을 URL로 접근 가능하게 정적 서빙
+// 업로드된 파일을 URL로 접근 가능하게 정적 서빙
 // 예) DB에 /uploads/파일명.jpg 저장 → 브라우저에서 http://서버주소/uploads/파일명.jpg 로 접근
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads"))); // ✅ 수정
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 // 기본 테스트 라우트
 app.get("/", (req, res) => {
