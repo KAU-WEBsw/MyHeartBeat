@@ -5,7 +5,6 @@ const { buildConditions, buildListQuery } = require("../utils/auction.filters");
 // 만료된 경매를 일괄 종료하고 낙찰 정보까지 반영하는 유틸
 const { closeExpiredAuctions } = require("../utils/auction.closer");
 
-
 // ==========================================================
 // 🟦 신규 경매 등록 API (POST /api/auctions)
 // ==========================================================
