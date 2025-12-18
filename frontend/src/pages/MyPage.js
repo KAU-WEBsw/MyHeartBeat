@@ -147,9 +147,6 @@ function MyPage() {
                       <button className={styles.ghost} onClick={() => navigate(`/product/${item.id}`)}>
                         보기
                       </button>
-                      <button className={styles.ghost} onClick={() => navigate(`/auction/new?edit=${item.id}`)}>
-                        수정
-                      </button>
                     </div>
                   </div>
                 </div>

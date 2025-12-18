@@ -2,7 +2,7 @@
 const db = require("../config/db");
 
 const closeExpiredAuctions = async () => {
-  // 1. 종료 시간 지난 경매 조회
+  // 종료 시간 지난 경매 조회
   const [expired] = await db.query(
     "SELECT id FROM auctions WHERE status = 'ongoing' AND end_time <= NOW()"
   );
@@ -10,7 +10,7 @@ const closeExpiredAuctions = async () => {
   // 만료된 경매 없으면 종료
   if (expired.length === 0) return;
 
-  // 2. 각 경매 종료 처리
+  // 각 경매 종료 처리
   for (const row of expired) {
     // 최고 입찰자 조회
     const [bids] = await db.query(

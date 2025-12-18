@@ -127,7 +127,6 @@ exports.createAuction = async (req, res) => {
 
 
 // 상품 상세 조회 (GET /api/auctions/:id)
-// 프론트에서 fetch('/api/auctions/5') 형태로 호출
 exports.getAuctionById = async (req, res) => {
   try {
     const { id } = req.params; // URL에서 상품 ID 추출
@@ -164,7 +163,14 @@ exports.getAuctionById = async (req, res) => {
     if (auction.status === "ended") {
       currentPrice = Number(auction.current_price); // 종료: DB에 저장된 최종 가격
     } else if (bids.length > 0) {
-      currentPrice = Math.max(...bids.map((b) => Number(b.amount))); // 진행중: 최고 입찰가
+      // 입찰 목록에서 최고가 찾기
+      let maxBid = 0;
+      for (const bid of bids) {
+        if (Number(bid.amount) > maxBid) {
+          maxBid = Number(bid.amount);
+        }
+      }
+      currentPrice = maxBid;
     } else {
       currentPrice = Number(auction.start_price); // 입찰 없음: 시작가
     }
