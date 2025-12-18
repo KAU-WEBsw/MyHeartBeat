@@ -14,9 +14,6 @@ router.get("/", auctionController.getAuctions);
 // 경매 등록 - 이미지 파일 업로드 가능
 router.post("/", upload.single("image"), auctionController.createAuction);
 
-// 경매 수정 - 이미지 파일 업로드 가능
-router.put("/:id", upload.single("image"), auctionController.updateAuction);
-
 // 경매 상세 조회
 router.get("/:id", auctionController.getAuctionById);
 
